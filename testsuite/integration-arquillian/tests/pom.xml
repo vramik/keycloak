@@ -153,6 +153,8 @@
                             <auth.server.management.port.jmx>${auth.server.management.port.jmx}</auth.server.management.port.jmx>
                             <auth.server.ssl.required>${auth.server.ssl.required}</auth.server.ssl.required>
                             <auth.server.jboss.startup.timeout>${auth.server.jboss.startup.timeout}</auth.server.jboss.startup.timeout>
+                            <auth.server.adapter.impl.class>${auth.server.adapter.impl.class}</auth.server.adapter.impl.class>
+                            <auth.server.config>${auth.server.config}</auth.server.config>
                             <auth.server.config.dir>${auth.server.config.dir}</auth.server.config.dir>
                             <frontend.console.output>${frontend.console.output}</frontend.console.output>
                             <backends.console.output>${backend.console.output}</backends.console.output>
@@ -193,7 +195,6 @@
                 <dependency>
                     <groupId>org.wildfly</groupId>
                     <artifactId>wildfly-arquillian-container-remote</artifactId>
-                    <version>${arquillian-wildfly-container.version}</version>
                 </dependency>
             </dependencies>
         </profile>
@@ -204,7 +205,9 @@
                 <auth.server>wildfly</auth.server>
                 <auth.server.jboss>true</auth.server.jboss>
                 <auth.server.undertow>false</auth.server.undertow>
+                <auth.server.config>standalone.xml</auth.server.config>
                 <auth.server.config.dir>${auth.server.home}/standalone/configuration</auth.server.config.dir>
+                <auth.server.adapter.impl.class>org.jboss.as.arquillian.container.managed.ManagedDeployableContainer</auth.server.adapter.impl.class>
                 <h2.version>1.3.173</h2.version>
             </properties>
             <dependencies>
@@ -221,7 +224,9 @@
                 <auth.server>eap</auth.server>
                 <auth.server.jboss>true</auth.server.jboss>
                 <auth.server.undertow>false</auth.server.undertow>
+                <auth.server.config>standalone.xml</auth.server.config>
                 <auth.server.config.dir>${auth.server.home}/standalone/configuration</auth.server.config.dir>
+                <auth.server.adapter.impl.class>org.jboss.as.arquillian.container.managed.ManagedDeployableContainer</auth.server.adapter.impl.class>
                 <h2.version>1.3.173</h2.version>
             </properties>
             <dependencies>

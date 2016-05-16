@@ -80,6 +80,11 @@
             </dependency>
             <dependency>
                 <groupId>org.wildfly</groupId>
+                <artifactId>wildfly-arquillian-container-domain-managed</artifactId>
+                <version>${arquillian-wildfly-container.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wildfly</groupId>
                 <artifactId>wildfly-arquillian-container-remote</artifactId>
                 <version>${arquillian-wildfly-container.version}</version>
             </dependency>
