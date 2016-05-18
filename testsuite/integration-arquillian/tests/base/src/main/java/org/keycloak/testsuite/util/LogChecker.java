@@ -1,10 +1,10 @@
 package org.keycloak.testsuite.util;
 
-import org.apache.commons.io.FileUtils;
-import org.jboss.logging.Logger;
-
 import java.io.File;
 import java.io.IOException;
+
+import org.apache.commons.io.FileUtils;
+import org.jboss.logging.Logger;
 
 /**
  *
@@ -42,7 +42,15 @@ public class LogChecker {
     }
 
     public static void checkJBossServerLog(String jbossHome) throws IOException {
-        checkServerLog(new File(jbossHome + "/standalone/log/server.log"));
+        File logFile = new File(jbossHome + "/standalone/log/server.log");
+        if (logFile.exists()){
+            checkServerLog(logFile);
+        } else {
+            checkServerLog(new File(jbossHome + "/domain/log/process-controller.log"));
+            checkServerLog(new File(jbossHome + "/domain/log/host-controller.log"));
+        }
+
+
     }
 
 }
