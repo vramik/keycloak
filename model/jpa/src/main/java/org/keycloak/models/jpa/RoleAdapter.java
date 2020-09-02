@@ -140,7 +140,7 @@ public class RoleAdapter implements RoleModel, JpaModel<RoleEntity> {
     }
 
     @Override
-    public void setAttribute(String name, Collection<String> values) {
+    public void setAttribute(String name, List<String> values) {
         removeAttribute(name);
 
         for (String value : values) {
