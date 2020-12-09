@@ -1604,6 +1604,7 @@ public class RealmAdapter implements CachedRealmModel {
         return cached.getComponents().get(id);
     }
 
+    @Override
     public void setAttribute(String name, String value) {
         getDelegateForUpdate();
         updated.setAttribute(name, value);
@@ -1690,6 +1691,32 @@ public class RealmAdapter implements CachedRealmModel {
             localizationTexts = cached.getRealmLocalizationTexts().get(locale);
         }
         return Collections.unmodifiableMap(localizationTexts);
+    }
+
+    @Override
+    public ClientInitialAccessModel createClientInitialAccessModel(int expiration, int count) {
+        getDelegateForUpdate();
+        return updated.createClientInitialAccessModel(expiration, count);
+    }
+
+    @Override
+    public ClientInitialAccessModel getClientInitialAccessModel(String id) {
+        return getDelegateForUpdate().getClientInitialAccessModel(id);
+    }
+
+    @Override
+    public void removeClientInitialAccessModel(String id) {
+        getDelegateForUpdate().removeClientInitialAccessModel(id);
+    }
+
+    @Override
+    public Stream<ClientInitialAccessModel> getClientInitialAccesses() {
+        return getDelegateForUpdate().getClientInitialAccesses();
+    }
+
+    @Override
+    public void decreaseRemainingCount(ClientInitialAccessModel clientInitialAccess) {
+        getDelegateForUpdate().decreaseRemainingCount(clientInitialAccess);
     }
 
     @Override

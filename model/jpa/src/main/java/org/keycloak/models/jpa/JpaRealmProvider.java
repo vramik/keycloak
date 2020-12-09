@@ -37,7 +37,6 @@ import org.jboss.logging.Logger;
 import org.keycloak.common.util.Time;
 import org.keycloak.connections.jpa.util.JpaUtils;
 import org.keycloak.migration.MigrationModel;
-import org.keycloak.models.ClientInitialAccessModel;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.ClientProvider;
 import org.keycloak.models.ClientScopeModel;
@@ -52,8 +51,8 @@ import org.keycloak.models.RealmProvider;
 import org.keycloak.models.RoleContainerModel;
 import org.keycloak.models.RoleModel;
 import org.keycloak.models.RoleProvider;
+import org.keycloak.models.ServerInfoProvider;
 import org.keycloak.models.jpa.entities.ClientEntity;
-import org.keycloak.models.jpa.entities.ClientInitialAccessEntity;
 import org.keycloak.models.jpa.entities.ClientScopeEntity;
 import org.keycloak.models.jpa.entities.GroupEntity;
 import org.keycloak.models.jpa.entities.RealmEntity;
@@ -65,7 +64,7 @@ import org.keycloak.models.utils.KeycloakModelUtils;
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
-public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientScopeProvider, GroupProvider, RoleProvider {
+public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientScopeProvider, GroupProvider, RoleProvider, ServerInfoProvider {
     protected static final Logger logger = Logger.getLogger(JpaRealmProvider.class);
     private final KeycloakSession session;
     protected EntityManager em;
@@ -209,8 +208,6 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
         RoleEntity entity = new RoleEntity();
         entity.setId(id);
         entity.setName(name);
-        RealmEntity ref = em.getReference(RealmEntity.class, realm.getId());
-        entity.setRealm(ref);
         entity.setRealmId(realm.getId());
         em.persist(entity);
         em.flush();
@@ -609,8 +606,7 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
         entity.setClientId(clientId);
         entity.setEnabled(true);
         entity.setStandardFlowEnabled(true);
-        RealmEntity realmRef = em.getReference(RealmEntity.class, realm.getId());
-        entity.setRealm(realmRef);
+        entity.setRealmId(realm.getId());
         em.persist(entity);
 
         final ClientModel resource = new ClientAdapter(realm, em, session, entity);
@@ -647,11 +643,11 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
     public ClientModel getClientById(RealmModel realm, String id) {
         logger.tracef("getClientById(%s, %s)%s", realm, id, getShortStackTrace());
 
-        ClientEntity app = em.find(ClientEntity.class, id);
-        // Check if application belongs to this realm
-        if (app == null || !realm.getId().equals(app.getRealm().getId())) return null;
-        ClientAdapter client = new ClientAdapter(realm, em, session, app);
-        return client;
+        ClientEntity client = em.find(ClientEntity.class, id);
+        // Check if client belongs to this realm
+        if (client == null || !realm.getId().equals(client.getRealmId())) return null;
+        ClientAdapter adapter = new ClientAdapter(realm, em, session, client);
+        return adapter;
 
     }
 
@@ -734,7 +730,7 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
         ClientScopeEntity clientScope = em.find(ClientScopeEntity.class, id);
 
         // Check if client scope belongs to this realm
-        if (clientScope == null || !realm.getId().equals(clientScope.getRealm().getId())) return null;
+        if (clientScope == null || !realm.getId().equals(clientScope.getRealmId())) return null;
         ClientScopeAdapter adapter = new ClientScopeAdapter(realm, em, session, clientScope);
         return adapter;
     }
@@ -757,8 +753,7 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
         entity.setId(id);
         name = KeycloakModelUtils.convertClientScopeName(name);
         entity.setName(name);
-        RealmEntity ref = em.getReference(RealmEntity.class, realm.getId());
-        entity.setRealm(ref);
+        entity.setRealmId(realm.getId());
         em.persist(entity);
         em.flush();
         return new ClientScopeAdapter(realm, em, session, entity);
@@ -808,64 +803,11 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
     }
 
     @Override
-    public ClientInitialAccessModel createClientInitialAccessModel(RealmModel realm, int expiration, int count) {
-        RealmEntity realmEntity = em.find(RealmEntity.class, realm.getId());
-
-        ClientInitialAccessEntity entity = new ClientInitialAccessEntity();
-        entity.setId(KeycloakModelUtils.generateId());
-        entity.setRealm(realmEntity);
-
-        entity.setCount(count);
-        entity.setRemainingCount(count);
-
-        int currentTime = Time.currentTime();
-        entity.setTimestamp(currentTime);
-        entity.setExpiration(expiration);
-
-        em.persist(entity);
-
-        return entityToModel(entity);
-    }
-
-    @Override
-    public ClientInitialAccessModel getClientInitialAccessModel(RealmModel realm, String id) {
-        ClientInitialAccessEntity entity = em.find(ClientInitialAccessEntity.class, id);
-        if (entity == null) return null;
-        if (!entity.getRealm().getId().equals(realm.getId())) return null;
-        return entityToModel(entity);
-    }
-
-    @Override
-    public void removeClientInitialAccessModel(RealmModel realm, String id) {
-        ClientInitialAccessEntity entity = em.find(ClientInitialAccessEntity.class, id, LockModeType.PESSIMISTIC_WRITE);
-        if (entity == null) return;
-        if (!entity.getRealm().getId().equals(realm.getId())) return;
-        em.remove(entity);
-        em.flush();
-    }
-
-    @Override
-    public Stream<ClientInitialAccessModel> listClientInitialAccessStream(RealmModel realm) {
-        RealmEntity realmEntity = em.find(RealmEntity.class, realm.getId());
-
-        TypedQuery<ClientInitialAccessEntity> query = em.createNamedQuery("findClientInitialAccessByRealm", ClientInitialAccessEntity.class);
-        query.setParameter("realm", realmEntity);
-        return closing(query.getResultStream().map(this::entityToModel));
-    }
-
-    @Override
     public void removeExpiredClientInitialAccess() {
         int currentTime = Time.currentTime();
 
         em.createNamedQuery("removeExpiredClientInitialAccess")
                 .setParameter("currentTime", currentTime)
-                .executeUpdate();
-    }
-
-    @Override
-    public void decreaseRemainingCount(RealmModel realm, ClientInitialAccessModel clientInitialAccess) {
-        em.createNamedQuery("decreaseClientInitialAccessRemainingCount")
-                .setParameter("id", clientInitialAccess.getId())
                 .executeUpdate();
     }
 
@@ -950,15 +892,4 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
             return false;
         }
     }
-
-    private ClientInitialAccessModel entityToModel(ClientInitialAccessEntity entity) {
-        ClientInitialAccessModel model = new ClientInitialAccessModel();
-        model.setId(entity.getId());
-        model.setCount(entity.getCount());
-        model.setRemainingCount(entity.getRemainingCount());
-        model.setExpiration(entity.getExpiration());
-        model.setTimestamp(entity.getTimestamp());
-        return model;
-    }
-
 }

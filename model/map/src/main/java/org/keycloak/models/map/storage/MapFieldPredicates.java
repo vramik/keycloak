@@ -19,6 +19,7 @@ package org.keycloak.models.map.storage;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.ClientScopeModel;
 import org.keycloak.models.GroupModel;
+import org.keycloak.models.RealmModel;
 import org.keycloak.models.RoleModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.models.map.authSession.AbstractRootAuthenticationSessionEntity;
@@ -26,6 +27,7 @@ import org.keycloak.models.map.client.AbstractClientEntity;
 import org.keycloak.models.map.clientscope.AbstractClientScopeEntity;
 import org.keycloak.models.map.common.AbstractEntity;
 import org.keycloak.models.map.group.AbstractGroupEntity;
+import org.keycloak.models.map.realm.AbstractRealmEntity;
 import org.keycloak.models.map.role.AbstractRoleEntity;
 import org.keycloak.storage.SearchableModelField;
 import java.util.HashMap;
@@ -49,6 +51,7 @@ import java.util.function.Predicate;
  */
 public class MapFieldPredicates {
 
+    public static final Map<SearchableModelField<RealmModel>, UpdatePredicatesFunc<Object, AbstractRealmEntity<Object>, RealmModel>> REALM_PREDICATES = basePredicates(RealmModel.SearchableFields.ID);
     public static final Map<SearchableModelField<ClientModel>, UpdatePredicatesFunc<Object, AbstractClientEntity<Object>, ClientModel>> CLIENT_PREDICATES = basePredicates(ClientModel.SearchableFields.ID);
     public static final Map<SearchableModelField<ClientScopeModel>, UpdatePredicatesFunc<Object, AbstractClientScopeEntity<Object>, ClientScopeModel>> CLIENT_SCOPE_PREDICATES = basePredicates(ClientScopeModel.SearchableFields.ID);
     public static final Map<SearchableModelField<GroupModel>, UpdatePredicatesFunc<Object, AbstractGroupEntity<Object>, GroupModel>> GROUP_PREDICATES = basePredicates(GroupModel.SearchableFields.ID);
@@ -60,6 +63,9 @@ public class MapFieldPredicates {
     private static final Map<Class<?>, Map> PREDICATES = new HashMap<>();
 
     static {
+        put(REALM_PREDICATES, RealmModel.SearchableFields.NAME,                   AbstractRealmEntity::getName);
+        put(REALM_PREDICATES, RealmModel.SearchableFields.CLIENT_INITIAL_ACCESS,  AbstractRealmEntity::hasClientInitialAccess);
+
         put(CLIENT_PREDICATES, ClientModel.SearchableFields.REALM_ID,             AbstractClientEntity::getRealmId);
         put(CLIENT_PREDICATES, ClientModel.SearchableFields.CLIENT_ID,            AbstractClientEntity::getClientId);
 
@@ -100,6 +106,7 @@ public class MapFieldPredicates {
     }
 
     static {
+        PREDICATES.put(RealmModel.class,                        REALM_PREDICATES);
         PREDICATES.put(ClientModel.class,                       CLIENT_PREDICATES);
         PREDICATES.put(ClientScopeModel.class,                  CLIENT_SCOPE_PREDICATES);
         PREDICATES.put(RoleModel.class,                         ROLE_PREDICATES);

@@ -20,7 +20,6 @@ package org.keycloak.models.cache.infinispan;
 import org.jboss.logging.Logger;
 import org.keycloak.cluster.ClusterProvider;
 import org.keycloak.component.ComponentModel;
-import org.keycloak.migration.MigrationModel;
 import org.keycloak.models.*;
 import org.keycloak.models.cache.CacheRealmProvider;
 import org.keycloak.models.cache.CachedRealmModel;
@@ -139,11 +138,6 @@ public class RealmCacheSession implements CacheRealmProvider {
     public void clear() {
         ClusterProvider cluster = session.getProvider(ClusterProvider.class);
         cluster.notify(InfinispanCacheRealmProviderFactory.REALM_CLEAR_CACHE_EVENTS, new ClearCacheEvent(), false, ClusterProvider.DCNotify.ALL_DCS);
-    }
-
-    @Override
-    public MigrationModel getMigrationModel() {
-        return getRealmDelegate().getMigrationModel();
     }
 
     @Override
@@ -1305,35 +1299,9 @@ public class RealmCacheSession implements CacheRealmProvider {
         realm.getClientScopesStream().map(ClientScopeModel::getId).forEach(id -> removeClientScope(realm, id));
     }
 
-    // Don't cache ClientInitialAccessModel for now
-    @Override
-    public ClientInitialAccessModel createClientInitialAccessModel(RealmModel realm, int expiration, int count) {
-        return getRealmDelegate().createClientInitialAccessModel(realm, expiration, count);
-    }
-
-    @Override
-    public ClientInitialAccessModel getClientInitialAccessModel(RealmModel realm, String id) {
-        return getRealmDelegate().getClientInitialAccessModel(realm, id);
-    }
-
-    @Override
-    public void removeClientInitialAccessModel(RealmModel realm, String id) {
-        getRealmDelegate().removeClientInitialAccessModel(realm, id);
-    }
-
-    @Override
-    public Stream<ClientInitialAccessModel> listClientInitialAccessStream(RealmModel realm) {
-        return getRealmDelegate().listClientInitialAccessStream(realm);
-    }
-
     @Override
     public void removeExpiredClientInitialAccess() {
         getRealmDelegate().removeExpiredClientInitialAccess();
-    }
-
-    @Override
-    public void decreaseRemainingCount(RealmModel realm, ClientInitialAccessModel clientInitialAccess) {
-        getRealmDelegate().decreaseRemainingCount(realm, clientInitialAccess);
     }
 
     @Override
