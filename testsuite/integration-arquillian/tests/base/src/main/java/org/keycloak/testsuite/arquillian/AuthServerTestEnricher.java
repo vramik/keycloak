@@ -368,6 +368,7 @@ public class AuthServerTestEnricher {
 
     public void startMigratedContainer(@Observes(precedence = 3) StartSuiteContainers event) {
         if (suiteContext.isAuthServerMigrationEnabled()) {
+            initializeTLS(suiteContext.getMigratedAuthServerInfo());
             log.info("\n\n### Starting keycloak " + System.getProperty("migrated.auth.server.version", "- previous") + " ###\n\n");
             startContainerEvent.fire(new StartContainer(suiteContext.getMigratedAuthServerInfo().getArquillianContainer()));
         }
