@@ -29,8 +29,10 @@ import org.keycloak.models.RealmModel;
 import org.keycloak.models.map.storage.MapKeycloakTransaction;
 import org.keycloak.models.map.common.Serialization;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -43,6 +45,8 @@ import org.keycloak.models.map.storage.MapStorage;
 import org.keycloak.models.map.storage.ModelCriteriaBuilder;
 import org.keycloak.models.map.storage.ModelCriteriaBuilder.Operator;
 import static org.keycloak.common.util.StackUtil.getShortStackTrace;
+import org.keycloak.models.ClientScopeModel;
+import org.keycloak.protocol.oidc.OIDCLoginProtocol;
 import static org.keycloak.utils.StreamsUtil.paginatedStream;
 
 public class MapClientProvider implements ClientProvider {
@@ -267,6 +271,47 @@ public class MapClientProvider implements ClientProvider {
           .sorted(COMPARE_BY_CLIENT_ID);
 
         return paginatedStream(s, firstResult, maxResults).map(entityToAdapterFunc(realm));
+    }
+
+    @Override
+    public void addClientScopes(ClientModel client, Set<ClientScopeModel> clientScopes, boolean defaultScope) {
+        MapClientEntity entity = tx.read(UUID.fromString(client.getId()));
+
+        if (entity == null) return;
+
+        for (ClientScopeModel clientScope : clientScopes) {
+            LOG.tracef("addClientScopes(%s, %s, %b)%s", client, clientScope, defaultScope, getShortStackTrace());
+            entity.addClientScope(clientScope.getId(), defaultScope);
+        }
+    }
+
+    @Override
+    public void removeClientScope(ClientModel client, ClientScopeModel clientScope) {
+        MapClientEntity entity = tx.read(UUID.fromString(client.getId()));
+
+        if (entity == null) return;
+
+        LOG.tracef("removeClientScope(%s, %s)%s", client, clientScope, getShortStackTrace());
+
+        entity.removeClientScope(clientScope.getId());
+    }
+
+    @Override
+    public Map<String, ClientScopeModel> getClientScopes(ClientModel client, boolean defaultScopes, boolean filterByProtocol) {
+        MapClientEntity entity = tx.read(UUID.fromString(client.getId()));
+
+        if (entity == null) return null;
+
+        // Defaults to openid-connect
+        String clientProtocol = client.getProtocol() == null ? OIDCLoginProtocol.LOGIN_PROTOCOL : client.getProtocol();
+
+        LOG.tracef("getClientScopes(%s, %b, %b)%s", client, defaultScopes, filterByProtocol, getShortStackTrace());
+
+        return entity.getClientScopes(defaultScopes)
+                .map(clientScopeId -> session.clientScopes().getClientScopeById(client.getRealm(), clientScopeId))
+                .filter(Objects::nonNull)
+                .filter(scope -> ! filterByProtocol || scope.getProtocol().equals(clientProtocol))
+                .collect(Collectors.toMap(ClientScopeModel::getName, Function.identity()));
     }
 
     @Override

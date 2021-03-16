@@ -16,6 +16,7 @@
  */
 package org.keycloak.storage;
 
+import java.util.Map;
 import org.jboss.logging.Logger;
 import org.keycloak.common.util.reflections.Types;
 import org.keycloak.component.ComponentModel;
@@ -31,7 +32,9 @@ import org.keycloak.storage.client.ClientStorageProviderModel;
 import org.keycloak.utils.ServicesUtils;
 
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
+import org.keycloak.models.ClientScopeModel;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -161,6 +164,18 @@ public class ClientStorageManager implements ClientProvider {
     }
 
     @Override
+    public Map<String, ClientScopeModel> getClientScopes(ClientModel client, boolean defaultScopes, boolean filterByProtocol) {
+        StorageId storageId = new StorageId(client.getId());
+        if (storageId.getProviderId() == null) {
+            return session.clientLocalStorage().getClientScopes(client, defaultScopes, filterByProtocol);
+        }
+        ClientLookupProvider provider = (ClientLookupProvider)getStorageProvider(session, client.getRealm(), storageId.getProviderId());
+        if (provider == null) return null;
+        if (!isStorageProviderEnabled(client.getRealm(), storageId.getProviderId())) return null;
+        return provider.getClientScopes(client, defaultScopes, filterByProtocol);
+    }
+
+    @Override
     public ClientModel addClient(RealmModel realm, String clientId) {
         return session.clientLocalStorage().addClient(realm, clientId);
     }
@@ -193,6 +208,22 @@ public class ClientStorageManager implements ClientProvider {
     @Override
     public void removeClients(RealmModel realm) {
         session.clientLocalStorage().removeClients(realm);
+    }
+
+    @Override
+    public void addClientScopes(ClientModel client, Set<ClientScopeModel> clientScopes, boolean defaultScope) {
+        if (!StorageId.isLocalStorage(client.getId())) {
+            throw new RuntimeException("Federated clients do not support this operation");
+        }
+        session.clientLocalStorage().addClientScopes(client, clientScopes, defaultScope);
+    }
+
+    @Override
+    public void removeClientScope(ClientModel client, ClientScopeModel clientScope) {
+        if (!StorageId.isLocalStorage(client.getId())) {
+            throw new RuntimeException("Federated clients do not support this operation");
+        }
+        session.clientLocalStorage().removeClientScope(client, clientScope);
     }
 
     @Override
