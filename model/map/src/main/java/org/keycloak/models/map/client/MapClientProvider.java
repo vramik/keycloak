@@ -274,30 +274,37 @@ public class MapClientProvider implements ClientProvider {
     }
 
     @Override
-    public void addClientScopes(ClientModel client, Set<ClientScopeModel> clientScopes, boolean defaultScope) {
+    public void addClientScopes(RealmModel realm, ClientModel client, Set<ClientScopeModel> clientScopes, boolean defaultScope) {
         MapClientEntity entity = tx.read(UUID.fromString(client.getId()));
 
         if (entity == null) return;
 
-        for (ClientScopeModel clientScope : clientScopes) {
-            LOG.tracef("addClientScopes(%s, %s, %b)%s", client, clientScope, defaultScope, getShortStackTrace());
-            entity.addClientScope(clientScope.getId(), defaultScope);
-        }
+        // Defaults to openid-connect
+        String clientProtocol = client.getProtocol() == null ? OIDCLoginProtocol.LOGIN_PROTOCOL : client.getProtocol();
+
+        LOG.tracef("addClientScopes(%s, %s, %s, %b)%s", realm, client, clientScopes, defaultScope, getShortStackTrace());
+
+        Map<String, ClientScopeModel> existingClientScopes = getClientScopes(realm, client, defaultScope);
+
+        clientScopes.stream()
+                .filter(clientScope -> ! existingClientScopes.containsKey(clientScope.getName()))
+                .filter(clientScope -> Objects.equals(clientScope.getProtocol(), clientProtocol))
+                .forEach(clientScope -> entity.addClientScope(clientScope.getId(), defaultScope));
     }
 
     @Override
-    public void removeClientScope(ClientModel client, ClientScopeModel clientScope) {
+    public void removeClientScope(RealmModel realm, ClientModel client, ClientScopeModel clientScope) {
         MapClientEntity entity = tx.read(UUID.fromString(client.getId()));
 
         if (entity == null) return;
 
-        LOG.tracef("removeClientScope(%s, %s)%s", client, clientScope, getShortStackTrace());
+        LOG.tracef("removeClientScope(%s, %s, %s)%s", realm, client, clientScope, getShortStackTrace());
 
         entity.removeClientScope(clientScope.getId());
     }
 
     @Override
-    public Map<String, ClientScopeModel> getClientScopes(ClientModel client, boolean defaultScopes, boolean filterByProtocol) {
+    public Map<String, ClientScopeModel> getClientScopes(RealmModel realm, ClientModel client, boolean defaultScopes) {
         MapClientEntity entity = tx.read(UUID.fromString(client.getId()));
 
         if (entity == null) return null;
@@ -305,12 +312,12 @@ public class MapClientProvider implements ClientProvider {
         // Defaults to openid-connect
         String clientProtocol = client.getProtocol() == null ? OIDCLoginProtocol.LOGIN_PROTOCOL : client.getProtocol();
 
-        LOG.tracef("getClientScopes(%s, %b, %b)%s", client, defaultScopes, filterByProtocol, getShortStackTrace());
+        LOG.tracef("getClientScopes(%s, %s, %b)%s", realm, client, defaultScopes, getShortStackTrace());
 
         return entity.getClientScopes(defaultScopes)
-                .map(clientScopeId -> session.clientScopes().getClientScopeById(client.getRealm(), clientScopeId))
+                .map(clientScopeId -> session.clientScopes().getClientScopeById(realm, clientScopeId))
                 .filter(Objects::nonNull)
-                .filter(scope -> ! filterByProtocol || scope.getProtocol().equals(clientProtocol))
+                .filter(clientScope -> Objects.equals(clientScope.getProtocol(), clientProtocol))
                 .collect(Collectors.toMap(ClientScopeModel::getName, Function.identity()));
     }
 

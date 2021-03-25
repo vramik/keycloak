@@ -795,11 +795,15 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
     }
 
     @Override
-    public void addClientScopes(ClientModel client, Set<ClientScopeModel> clientScopes, boolean defaultScope) {
-        Map<String, ClientScopeModel> existingClientScopes = getClientScopes(client, defaultScope, false);
+    public void addClientScopes(RealmModel realm, ClientModel client, Set<ClientScopeModel> clientScopes, boolean defaultScope) {
+        // Defaults to openid-connect
+        String clientProtocol = client.getProtocol() == null ? OIDCLoginProtocol.LOGIN_PROTOCOL : client.getProtocol();
+
+        Map<String, ClientScopeModel> existingClientScopes = getClientScopes(realm, client, defaultScope);
 
         clientScopes.stream()
             .filter(clientScope -> ! existingClientScopes.containsKey(clientScope.getName()))
+            .filter(clientScope -> Objects.equals(clientScope.getProtocol(), clientProtocol))
             .forEach(clientScope -> {
                 ClientScopeClientMappingEntity entity = new ClientScopeClientMappingEntity();
                 entity.setClientScopeId(clientScope.getId());
@@ -812,7 +816,7 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
     }
 
     @Override
-    public void removeClientScope(ClientModel client, ClientScopeModel clientScope) {
+    public void removeClientScope(RealmModel realm, ClientModel client, ClientScopeModel clientScope) {
         em.createNamedQuery("deleteClientScopeClientMapping")
                 .setParameter("clientScopeId", clientScope.getId())
                 .setParameter("clientId", client.getId())
@@ -821,7 +825,7 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
     }
 
     @Override
-    public Map<String, ClientScopeModel> getClientScopes(ClientModel client, boolean defaultScope, boolean filterByProtocol) {
+    public Map<String, ClientScopeModel> getClientScopes(RealmModel realm, ClientModel client, boolean defaultScope) {
         // Defaults to openid-connect
         String clientProtocol = client.getProtocol() == null ? OIDCLoginProtocol.LOGIN_PROTOCOL : client.getProtocol();
 
@@ -830,9 +834,9 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
         query.setParameter("defaultScope", defaultScope);
 
         return query.getResultStream()
-                .map(clientScopeId -> session.clientScopes().getClientScopeById(client.getRealm(), clientScopeId))
+                .map(clientScopeId -> session.clientScopes().getClientScopeById(realm, clientScopeId))
                 .filter(Objects::nonNull)
-                .filter(scope -> ! filterByProtocol || scope.getProtocol().equals(clientProtocol))
+                .filter(clientScope -> Objects.equals(clientScope.getProtocol(), clientProtocol))
                 .collect(Collectors.toMap(ClientScopeModel::getName, Function.identity()));
     }
 

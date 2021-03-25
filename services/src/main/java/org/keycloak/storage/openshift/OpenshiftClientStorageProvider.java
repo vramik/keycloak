@@ -97,7 +97,7 @@ public class OpenshiftClientStorageProvider implements ClientStorageProvider {
     }
 
     @Override
-    public Map<String, ClientScopeModel> getClientScopes(ClientModel client, boolean defaultScopes, boolean filterByProtocol) {
+    public Map<String, ClientScopeModel> getClientScopes(RealmModel realm, ClientModel client, boolean defaultScopes) {
         // TODO not sure about this, this implementation doesn't use it now
         return Collections.EMPTY_MAP;
     }

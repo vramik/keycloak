@@ -98,10 +98,10 @@ public interface ClientLookupProvider {
     /**
      * Return all default scopes (if {@code defaultScope} is {@code true}) or all optional scopes (if {@code defaultScope} is {@code false}) linked with the client
      *
+     * @param realm Realm
      * @param client Client
      * @param defaultScopes if true default scopes, if false optional scopes, are returned
-     * @param filterByProtocol if true, then just client scopes of same protocol like current client will be returned
      * @return map where key is the name of the clientScope, value is particular clientScope. Returns empty map if no scopes linked (never returns null).
      */
-    Map<String, ClientScopeModel> getClientScopes(ClientModel client, boolean defaultScopes, boolean filterByProtocol);
+    Map<String, ClientScopeModel> getClientScopes(RealmModel realm, ClientModel client, boolean defaultScopes);
 }

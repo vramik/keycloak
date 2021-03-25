@@ -99,22 +99,22 @@ public class ClientAdapter implements ClientModel, CachedObject {
 
     @Override
     public void addClientScope(ClientScopeModel clientScope, boolean defaultScope) {
-        cacheSession.addClientScopes(this, Collections.singleton(clientScope), defaultScope);
+        cacheSession.addClientScopes(getRealm(), this, Collections.singleton(clientScope), defaultScope);
     }
 
     @Override
     public void addClientScopes(Set<ClientScopeModel> clientScopes, boolean defaultScope) {
-        cacheSession.addClientScopes(this, clientScopes, defaultScope);
+        cacheSession.addClientScopes(getRealm(), this, clientScopes, defaultScope);
     }
 
     @Override
     public void removeClientScope(ClientScopeModel clientScope) {
-        cacheSession.removeClientScope(this, clientScope);
+        cacheSession.removeClientScope(getRealm(), this, clientScope);
     }
 
     @Override
-    public Map<String, ClientScopeModel> getClientScopes(boolean defaultScope, boolean filterByProtocol) {
-        return cacheSession.getClientScopes(this, defaultScope, filterByProtocol);
+    public Map<String, ClientScopeModel> getClientScopes(boolean defaultScope) {
+        return cacheSession.getClientScopes(getRealm(), this, defaultScope);
     }
 
     public void addWebOrigin(String webOrigin) {

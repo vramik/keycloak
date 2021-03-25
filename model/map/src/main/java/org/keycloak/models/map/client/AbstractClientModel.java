@@ -51,7 +51,7 @@ public abstract class AbstractClientModel<E extends AbstractEntity> implements C
 
     @Override
     public void addClientScopes(Set<ClientScopeModel> clientScopes, boolean defaultScope) {
-        session.clients().addClientScopes(this, clientScopes, defaultScope);
+        session.clients().addClientScopes(getRealm(), this, clientScopes, defaultScope);
     }
 
     @Override
@@ -61,12 +61,12 @@ public abstract class AbstractClientModel<E extends AbstractEntity> implements C
 
     @Override
     public void removeClientScope(ClientScopeModel clientScope) {
-        session.clients().removeClientScope(this, clientScope);
+        session.clients().removeClientScope(getRealm(), this, clientScope);
     }
 
     @Override
-    public Map<String, ClientScopeModel> getClientScopes(boolean defaultScope, boolean filterByProtocol) {
-        return session.clients().getClientScopes(this, defaultScope, filterByProtocol);
+    public Map<String, ClientScopeModel> getClientScopes(boolean defaultScope) {
+        return session.clients().getClientScopes(getRealm(), this, defaultScope);
     }
 
     @Override
