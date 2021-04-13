@@ -26,6 +26,7 @@ import org.keycloak.models.Constants;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.RealmProvider;
+import org.keycloak.models.ServerInfoProvider;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.clientscope.ClientScopeStorageProvider;
 import org.keycloak.storage.clientscope.ClientScopeStorageProviderModel;
@@ -33,6 +34,7 @@ import org.keycloak.testsuite.federation.HardcodedClientScopeStorageProviderFact
 
 @RequireProvider(RealmProvider.class)
 @RequireProvider(ClientScopeStorageProvider.class)
+@RequireProvider(ServerInfoProvider.class)
 public class ClientScopeStorageTest extends KeycloakModelTest {
 
     private String realmId;

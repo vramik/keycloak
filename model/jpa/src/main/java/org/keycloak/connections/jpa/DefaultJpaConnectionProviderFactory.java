@@ -25,6 +25,7 @@ import org.keycloak.ServerStartupError;
 import org.keycloak.common.util.StringPropertyReplacer;
 import org.keycloak.connections.jpa.updater.JpaUpdaterProvider;
 import org.keycloak.connections.jpa.util.JpaUtils;
+import org.keycloak.migration.MigrationModelManager;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.models.KeycloakSessionTask;
@@ -171,6 +172,7 @@ public class DefaultJpaConnectionProviderFactory implements JpaConnectionProvide
                         properties.put("hibernate.format_sql", config.getBoolean("formatSql", true));
 
                         Connection connection = getConnection();
+
                         try {
                             prepareOperationalInfo(connection);
 
@@ -212,6 +214,18 @@ public class DefaultJpaConnectionProviderFactory implements JpaConnectionProvide
 
                             if (globalStatsInterval != -1) {
                                 startGlobalStats(session, globalStatsInterval);
+                            }
+
+                            /*
+                             * Migrate model is executed just in case following providers are "jpa".
+                             * In Map Storage, there is an assumption that migrateModel is not needed.
+                             */
+                            if ("jpa".equals(config.get("keycloak.realm.provider", "jpa")) &&
+                                "jpa".equals(config.get("keycloak.client.provider", "jpa")) &&
+                                "jpa".equals(config.get("keycloak.clientScope.provider", "jpa"))) {
+
+                                logger.debug("Calling migrateModel");
+                                migrateModel(session);
                             }
                         } finally {
                             // Close after creating EntityManagerFactory to prevent in-mem databases from closing
@@ -402,4 +416,7 @@ public class DefaultJpaConnectionProviderFactory implements JpaConnectionProvide
         }
     }
 
+    private void migrateModel(KeycloakSession session) {
+        KeycloakModelUtils.runJobInTransaction(session.getKeycloakSessionFactory(), MigrationModelManager::migrate);
+    }
 }
