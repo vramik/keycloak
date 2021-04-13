@@ -47,6 +47,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
+import org.keycloak.models.ServerInfoProvider;
 
 /**
  *
@@ -54,6 +55,7 @@ import static org.junit.Assume.assumeThat;
  */
 @RequireProvider(UserProvider.class)
 @RequireProvider(RealmProvider.class)
+@RequireProvider(ServerInfoProvider.class)
 public class UserModelTest extends KeycloakModelTest {
 
     protected static final int NUM_GROUPS = 100;

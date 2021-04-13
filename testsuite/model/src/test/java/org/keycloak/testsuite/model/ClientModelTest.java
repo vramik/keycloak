@@ -27,6 +27,7 @@ import org.keycloak.models.RealmModel;
 import org.keycloak.models.RealmProvider;
 import org.keycloak.models.RoleModel;
 import org.keycloak.models.RoleProvider;
+import org.keycloak.models.ServerInfoProvider;
 
 /**
  *
@@ -35,6 +36,7 @@ import org.keycloak.models.RoleProvider;
 @RequireProvider(RealmProvider.class)
 @RequireProvider(ClientProvider.class)
 @RequireProvider(RoleProvider.class)
+@RequireProvider(ServerInfoProvider.class)
 public class ClientModelTest extends KeycloakModelTest {
 
     private String realmId;

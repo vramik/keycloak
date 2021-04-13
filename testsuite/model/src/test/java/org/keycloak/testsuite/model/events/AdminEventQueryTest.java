@@ -30,12 +30,14 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import org.keycloak.models.ServerInfoProvider;
 
 /**
  *
  * @author hmlnarik
  */
 @RequireProvider(EventStoreProvider.class)
+@RequireProvider(ServerInfoProvider.class)
 public class AdminEventQueryTest extends KeycloakModelTest {
 
     private final KeycloakSession session = FACTORY.create();
