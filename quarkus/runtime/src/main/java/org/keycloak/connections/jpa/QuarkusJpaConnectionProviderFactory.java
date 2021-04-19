@@ -240,9 +240,9 @@ public class QuarkusJpaConnectionProviderFactory implements JpaConnectionProvide
                     * Migrate model is executed just in case following providers are "jpa".
                     * In Map Storage, there is an assumption that migrateModel is not needed.
                     */
-                    if ("jpa".equals(config.get("realm", "jpa")) &&
-                        "jpa".equals(config.get("client", "jpa")) &&
-                        "jpa".equals(config.get("clientScope", "jpa"))) {
+                    if ("jpa".equals(Config.getProvider("realm")) &&
+                        "jpa".equals(Config.getProvider("client")) &&
+                        "jpa".equals(Config.getProvider("clientScope"))) {
 
                         logger.debug("Calling migrateModel");
                         migrateModel(session);
