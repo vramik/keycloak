@@ -216,6 +216,9 @@ public class DefaultJpaConnectionProviderFactory implements JpaConnectionProvide
                                 startGlobalStats(session, globalStatsInterval);
                             }
 
+                            logger.debugf("keycloak.realm.provider: %s", config.get("keycloak.realm.provider"));
+                            logger.debugf("keycloak.client.provider: %s", config.get("keycloak.client.provider"));
+                            logger.debugf("keycloak.clientScope.provider: %s", config.get("keycloak.clientScope.provider"));
                             /*
                              * Migrate model is executed just in case following providers are "jpa".
                              * In Map Storage, there is an assumption that migrateModel is not needed.
