@@ -69,6 +69,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.*;
+import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
 import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 
@@ -741,6 +742,15 @@ public class ClientTest extends AbstractAdminTest {
 
         ClientRepresentation storedClient = realm.clients().get(client.getId()).toRepresentation();
         assertClient(client, storedClient);
+    }
+
+    @Test
+    public void removalOfInternalClientShouldFail() {
+        RealmRepresentation rep = new RealmRepresentation();
+        rep.setRealm("testing");
+        adminClient.realms().create(rep);
+        String id = adminClient.realm("master").clients().findByClientId("testing-realm").get(0).getId();
+        adminClient.realm("master").clients().get(id).remove();
     }
 
     public static void assertClient(ClientRepresentation client, ClientRepresentation storedClient) {
