@@ -35,5 +35,5 @@ public interface MapStorageProvider extends Provider {
      * @return
      * @throws IllegalArgumentException If some of the types is not supported by the underlying implementation.
      */
-    <K, V extends AbstractEntity<K>, M> MapStorage<K, V, M> getStorage(Class<V> valueType, Class<M> modelType, Flag... flags);
+    <K, V extends AbstractEntity<K>, M> MapStorage<K, V, M> getStorage(Class<M> modelType, Flag... flags);
 }
