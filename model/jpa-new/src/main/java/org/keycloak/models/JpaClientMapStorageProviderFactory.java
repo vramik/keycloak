@@ -33,7 +33,7 @@ public class JpaClientMapStorageProviderFactory implements
 
     @Override
     public MapStorageProvider create(KeycloakSession session) {
-        return new JpaClientMapStorageProvider();
+        return new JpaClientMapStorageProvider(session);
     }
 
     @Override

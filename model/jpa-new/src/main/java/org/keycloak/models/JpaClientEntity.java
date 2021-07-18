@@ -38,4 +38,7 @@ public class JpaClientEntity implements AbstractEntity<UUID> {
         return id;
     }
 
+    public void setId(UUID id) {
+        this.id = id;
+    }
 }

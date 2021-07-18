@@ -17,11 +17,18 @@
 package org.keycloak.models;
 
 import java.util.UUID;
+import org.keycloak.connections.jpa.JpaConnectionProvider;
 import org.keycloak.models.map.storage.MapStorage;
 import org.keycloak.models.map.storage.MapStorageProvider;
 import org.keycloak.models.map.storage.MapStorageProviderFactory.Flag;
 
 public class JpaClientMapStorageProvider implements MapStorageProvider {
+
+    private final KeycloakSession session;
+
+    public JpaClientMapStorageProvider(KeycloakSession session) {
+        this.session = session;
+    }
 
     @Override
     public void close() {
@@ -29,7 +36,6 @@ public class JpaClientMapStorageProvider implements MapStorageProvider {
 
     @Override
     public MapStorage<UUID, JpaClientEntity, ClientModel> getStorage(Class modelType, Flag... flags) {
-        //tmp
-        return new JpaClientMapStorage();
+        return new JpaClientMapStorage(session.getProvider(JpaConnectionProvider.class).getEntityManager());
     }
 }

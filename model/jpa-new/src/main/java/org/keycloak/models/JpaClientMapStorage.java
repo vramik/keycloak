@@ -18,6 +18,7 @@ package org.keycloak.models;
 
 import java.util.UUID;
 import java.util.stream.Stream;
+import javax.persistence.EntityManager;
 import org.keycloak.models.map.storage.MapKeycloakTransaction;
 import org.keycloak.models.map.storage.MapStorage;
 import org.keycloak.models.map.storage.ModelCriteriaBuilder;
@@ -26,9 +27,18 @@ import org.keycloak.models.map.storage.StringKeyConvertor;
 
 public class JpaClientMapStorage implements MapStorage<UUID, JpaClientEntity, ClientModel> {
 
+    private final EntityManager em;//try em first
+
+    public JpaClientMapStorage(EntityManager em) {
+        this.em = em;
+    }
+
     @Override
     public JpaClientEntity create(JpaClientEntity clientEntity) {
-        // em.persist(value)
+        if (clientEntity.getId() == null) {
+            clientEntity.setId(UUID.randomUUID());
+        }
+        em.persist(clientEntity);
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
