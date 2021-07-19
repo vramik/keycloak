@@ -29,7 +29,7 @@ public class JpaClientMapStorageProviderFactory implements
         EnvironmentDependentProviderFactory {
 
 
-    public static final String PROVIDER_ID = "jpa-new";
+    public static final String PROVIDER_ID = "jpa-client-map-storage";
 
     @Override
     public MapStorageProvider create(KeycloakSession session) {

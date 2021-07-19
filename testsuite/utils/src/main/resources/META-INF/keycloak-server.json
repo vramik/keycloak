@@ -95,7 +95,18 @@
     },
 
     "connectionsJpa": {
+        "provider": "jpa-clients",
         "default": {
+            "url": "${keycloak.connectionsJpa.url:jdbc:h2:mem:test;DB_CLOSE_DELAY=-1}",
+            "driver": "${keycloak.connectionsJpa.driver:org.h2.Driver}",
+            "driverDialect": "${keycloak.connectionsJpa.driverDialect:}",
+            "user": "${keycloak.connectionsJpa.user:sa}",
+            "password": "${keycloak.connectionsJpa.password:}",
+            "showSql": "${keycloak.connectionsJpa.showSql:}",
+            "formatSql": "${keycloak.connectionsJpa.formatSql:}",
+            "globalStatsInterval": "${keycloak.connectionsJpa.globalStatsInterval:}"
+        },
+        "jpa-clients": {
             "url": "${keycloak.connectionsJpa.url:jdbc:h2:mem:test;DB_CLOSE_DELAY=-1}",
             "driver": "${keycloak.connectionsJpa.driver:org.h2.Driver}",
             "driverDialect": "${keycloak.connectionsJpa.driverDialect:}",

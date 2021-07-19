@@ -46,6 +46,10 @@
         </dependency>
         <dependency>
             <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-model-jpa-new</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.keycloak</groupId>
             <artifactId>keycloak-model-infinispan</artifactId>
         </dependency>
         <!-- identity providers -->
