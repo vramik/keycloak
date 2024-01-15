@@ -1,6 +1,7 @@
 package org.keycloak.testsuite.federation.storage;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.jboss.arquillian.graphene.page.Page;
@@ -512,6 +513,36 @@ public class UserStorageTest extends AbstractAuthTest {
                     .peek(System.out::println).collect(Collectors.toList());
             Assert.assertEquals(1, userModels.size());
             Assert.assertEquals("thor", userModels.get(0).getUsername());
+        });
+    }
+
+    @Test
+    public void storeAndReadUserWithLongAttributeValue() {
+        testingClient.server().run(session -> {
+            String longValue = RandomStringUtils.random(30000, true, true);
+            RealmModel realm = session.realms().getRealmByName("test");
+            UserModel userModel = session.users().getUserByUsername(realm, "thor");
+            userModel.setSingleAttribute("weapon", longValue);
+
+            List<UserModel> userModels = session.users().searchForUserStream(realm, Map.of(UserModel.USERNAME, "thor"))
+                    .collect(Collectors.toList());
+            assertThat(userModels, hasSize(1));
+            assertThat(userModels.get(0).getAttributes().get("weapon").get(0), equalTo(longValue));
+        });
+    }
+
+    @Test
+    public void searchByLongAttributeValue() {
+        testingClient.server().run(session -> {
+            String longValue = RandomStringUtils.random(30000, true, true);
+            RealmModel realm = session.realms().getRealmByName("test");
+            UserModel userModel = session.users().getUserByUsername(realm, "thor");
+            userModel.setSingleAttribute("weapon", longValue);
+
+            List<UserModel> userModels = session.users().searchForUserStream(realm, Map.of(UserModel.USERNAME, "thor"))
+                    .collect(Collectors.toList());
+            assertThat(userModels, hasSize(1));
+            assertThat(userModels.get(0).getAttributes().get("weapon").get(0), equalTo(longValue));
         });
     }
 
