@@ -16,3 +16,6 @@
 #
 
 org.keycloak.connections.jpa.updater.liquibase.MySQL8VarcharType
+org.keycloak.connections.jpa.updater.liquibase.MySQLClobType
+org.keycloak.connections.jpa.updater.liquibase.MySQLNCharType
+org.keycloak.connections.jpa.updater.liquibase.MySQLNVarcharType
