@@ -501,7 +501,11 @@ public class UserStorageManager extends AbstractStorageManager<UserStorageProvid
             } else if (provider instanceof UserFederatedStorageProvider) {
                 return  paginatedStream(((UserFederatedStorageProvider)provider).getUsersByUserAttributeStream(realm, attrName, attrValue)
                         .map(id -> getUserById(realm, id))
-                        .filter(Objects::nonNull), firstResultInQuery, maxResultsInQuery);
+                        .filter(Objects::nonNull)
+                        // this check verifies that there are no collisions with hashes
+                        .filter(user -> user.getAttributeStream(attrName)
+                                .anyMatch(attributeValue -> Objects.equals(attributeValue, attrValue))
+                        ), firstResultInQuery, maxResultsInQuery);
 
             }
             return Stream.empty();
