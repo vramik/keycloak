@@ -1014,7 +1014,7 @@ public class JpaUserProvider implements UserProvider, UserCredentialStore {
                         customLongValueSearchAttributes.put(key, value);
                         attributePredicates.add(builder.and(
                                 builder.equal(builder.lower(attributesJoin.get("name")), key.toLowerCase()),
-                                builder.equal(builder.lower(attributesJoin.get("longValueHash")), HashUtils.hash(JavaAlgorithm.SHA512, value.toLowerCase().getBytes(StandardCharsets.UTF_8)))));
+                                builder.equal(attributesJoin.get("longValueHash"), HashUtils.hash(JavaAlgorithm.SHA512, value.getBytes(StandardCharsets.UTF_8)))));
                     } else {
                         attributePredicates.add(builder.and(
                                 builder.equal(builder.lower(attributesJoin.get("name")), key.toLowerCase()),

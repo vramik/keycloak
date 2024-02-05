@@ -915,14 +915,14 @@ public class UserTest extends AbstractAdminTest {
 
     @Test
     public void searchByLongAttributes() {
-        String longValue = RandomStringUtils.random(30000, true, true);
-        String longValue2 = RandomStringUtils.random(30000, true, true);
+        String longValue = RandomStringUtils.random(3000, true, true);
+        String longValue2 = RandomStringUtils.random(3000, true, true);
 
         getCleanup().addUserId(createUser(REALM_NAME, "user1", "password", "user1FirstName", "user1LastName", "user1@example.com", 
                 user -> user.setAttributes(Map.of("test1", List.of(longValue, "v2"), "test2", List.of("v2")))));
-        getCleanup().addUserId(createUser(REALM_NAME, "user2", "password", "user1FirstName", "user1LastName", "user1@example.com", 
+        getCleanup().addUserId(createUser(REALM_NAME, "user2", "password", "user2FirstName", "user2LastName", "user2@example.com", 
                 user -> user.setAttributes(Map.of("test1", List.of(longValue, "v2"), "test2", List.of(longValue2)))));
-        getCleanup().addUserId(createUser(REALM_NAME, "user3", "password", "user1FirstName", "user1LastName", "user1@example.com", 
+        getCleanup().addUserId(createUser(REALM_NAME, "user3", "password", "user3FirstName", "user3LastName", "user3@example.com", 
                 user -> user.setAttributes(Map.of("test2", List.of(longValue, "v3"), "test4", List.of("v4")))));
 
         assertThat(realm.users().searchByAttributes(mapToSearchQuery(Map.of("test1", longValue))).stream().map(UserRepresentation::getUsername).collect(Collectors.toList()), 
