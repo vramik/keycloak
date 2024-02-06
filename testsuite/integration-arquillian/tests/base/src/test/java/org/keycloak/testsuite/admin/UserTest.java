@@ -929,6 +929,10 @@ public class UserTest extends AbstractAdminTest {
                 both(hasSize(2)).and(containsInAnyOrder("user1", "user2")));
         assertThat(realm.users().searchByAttributes(mapToSearchQuery(Map.of("test1", longValue, "test2", longValue2))).stream().map(UserRepresentation::getUsername).collect(Collectors.toList()), 
                 both(hasSize(1)).and(contains("user2")));
+        
+        //case insesitive search
+        assertThat(realm.users().searchByAttributes(mapToSearchQuery(Map.of("test1", longValue, "test2", longValue2.toUpperCase()))).stream().map(UserRepresentation::getUsername).collect(Collectors.toList()), 
+                both(hasSize(1)).and(contains("user2")));
     }
 
     @Test

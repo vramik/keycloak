@@ -80,11 +80,13 @@ import static java.util.Calendar.DAY_OF_WEEK;
 import static java.util.Calendar.HOUR_OF_DAY;
 import static java.util.Calendar.MINUTE;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.both;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.keycloak.models.UserModel.RequiredAction.UPDATE_PROFILE;
@@ -539,10 +541,12 @@ public class UserStorageTest extends AbstractAuthTest {
             UserModel userModel = session.users().getUserByUsername(realm, "thor");
             userModel.setSingleAttribute("weapon", longValue);
 
-            List<UserModel> userModels = session.users().searchForUserStream(realm, Map.of(UserModel.USERNAME, "thor"))
-                    .collect(Collectors.toList());
-            assertThat(userModels, hasSize(1));
-            assertThat(userModels.get(0).getAttributes().get("weapon").get(0), equalTo(longValue));
+            assertThat(session.users().searchForUserByUserAttributeStream(realm, "weapon", longValue).map(UserModel::getUsername).collect(Collectors.toList()), 
+                    both(hasSize(1)).and(contains("thor")));
+
+            //case insesitive search
+            assertThat(session.users().searchForUserByUserAttributeStream(realm, "weapon", longValue.toUpperCase()).map(UserModel::getUsername).collect(Collectors.toList()), 
+                    both(hasSize(1)).and(contains("thor")));
         });
     }
 

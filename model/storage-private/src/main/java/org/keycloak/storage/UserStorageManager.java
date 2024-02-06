@@ -503,10 +503,9 @@ public class UserStorageManager extends AbstractStorageManager<UserStorageProvid
                         .map(id -> getUserById(realm, id))
                         .filter(Objects::nonNull)
                         // this check verifies that there are no collisions with hashes
-                        .filter(user -> user.getAttributeStream(attrName)
-                                .anyMatch(attributeValue -> Objects.equals(attributeValue, attrValue))
+                        .filter((UserModel user) -> user.getAttributeStream(attrName)
+                                .anyMatch(attributeValue -> (attributeValue == null && attrValue == null) || (attributeValue != null && attributeValue.equalsIgnoreCase(attrValue)))
                         ), firstResultInQuery, maxResultsInQuery);
-
             }
             return Stream.empty();
         }, realm, null, null);

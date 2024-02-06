@@ -100,7 +100,7 @@ public class UserAttributeEntity {
         } else if (value.length() > 255) {
             this.value = null;
             this.longValue = value;
-            this.longValueHash = HashUtils.hash(JavaAlgorithm.SHA512, value.getBytes(StandardCharsets.UTF_8));
+            this.longValueHash = HashUtils.hash(JavaAlgorithm.SHA512, value.toLowerCase().getBytes(StandardCharsets.UTF_8));
         } else {
             this.value = value;
             this.longValue = null;

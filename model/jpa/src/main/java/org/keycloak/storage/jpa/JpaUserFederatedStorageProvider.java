@@ -172,7 +172,7 @@ public class JpaUserFederatedStorageProvider implements
                 em.createNamedQuery("getFederatedAttributesByNameAndLongValue", String.class)
                         .setParameter("realmId", realm.getId())
                         .setParameter("name", name)
-                        .setParameter("longValueHash", HashUtils.hash(JavaAlgorithm.SHA512, value.getBytes(StandardCharsets.UTF_8))) : 
+                        .setParameter("longValueHash", HashUtils.hash(JavaAlgorithm.SHA512, value.toLowerCase().getBytes(StandardCharsets.UTF_8))) : 
                 em.createNamedQuery("getFederatedAttributesByNameAndValue", String.class)
                         .setParameter("realmId", realm.getId())
                         .setParameter("name", name)

@@ -759,7 +759,7 @@ public class JpaUserProvider implements UserProvider, UserCredentialStore {
                 .filter(user -> customLongValueSearchAttributes.isEmpty() || // are there some long attribute values
                         customLongValueSearchAttributes.entrySet().stream().allMatch(longAttrEntry -> //for all long search attributes
                                 user.getAttributes().stream().anyMatch(userAttribute -> //check whether the user indeed has the attribute
-                                        Objects.equals(longAttrEntry.getKey(), userAttribute.getName()) && Objects.equals(longAttrEntry.getValue(), userAttribute.getValue())))
+                                        Objects.equals(longAttrEntry.getKey(), userAttribute.getName()) && longAttrEntry.getValue().equalsIgnoreCase(userAttribute.getValue())))
                 ).map(userEntity -> users.getUserById(realm, userEntity.getId()))
                 .filter(Objects::nonNull);
     }
@@ -771,7 +771,7 @@ public class JpaUserProvider implements UserProvider, UserCredentialStore {
                 em.createNamedQuery("getRealmUsersByAttributeNameAndLongValue", UserEntity.class)
                         .setParameter("realmId", realm.getId())
                         .setParameter("name", attrName)
-                        .setParameter("longValueHash", HashUtils.hash(JavaAlgorithm.SHA512, attrValue.getBytes(StandardCharsets.UTF_8))) : 
+                        .setParameter("longValueHash", HashUtils.hash(JavaAlgorithm.SHA512, attrValue.toLowerCase().getBytes(StandardCharsets.UTF_8))) : 
                 em.createNamedQuery("getRealmUsersByAttributeNameAndValue", UserEntity.class)
                         .setParameter("realmId", realm.getId())
                         .setParameter("name", attrName)
@@ -780,7 +780,7 @@ public class JpaUserProvider implements UserProvider, UserCredentialStore {
         return closing(query.getResultStream()
                 // following check verifies that there are no collisions with hashes
                 .filter(user -> !longAttribute || user.getAttributes().stream()
-                        .anyMatch(attribute -> Objects.equals(attrName, attribute.getName()) && Objects.equals(attrValue, attribute.getValue())))
+                        .anyMatch(attribute -> Objects.equals(attrName, attribute.getName()) && attrValue.equalsIgnoreCase(attribute.getValue())))
                 .map(userEntity -> new UserAdapter(session, realm, em, userEntity)));
     }
 
@@ -1014,7 +1014,7 @@ public class JpaUserProvider implements UserProvider, UserCredentialStore {
                         customLongValueSearchAttributes.put(key, value);
                         attributePredicates.add(builder.and(
                                 builder.equal(builder.lower(attributesJoin.get("name")), key.toLowerCase()),
-                                builder.equal(attributesJoin.get("longValueHash"), HashUtils.hash(JavaAlgorithm.SHA512, value.getBytes(StandardCharsets.UTF_8)))));
+                                builder.equal(attributesJoin.get("longValueHash"), HashUtils.hash(JavaAlgorithm.SHA512, value.toLowerCase().getBytes(StandardCharsets.UTF_8)))));
                     } else {
                         attributePredicates.add(builder.and(
                                 builder.equal(builder.lower(attributesJoin.get("name")), key.toLowerCase()),
