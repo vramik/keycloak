@@ -160,6 +160,8 @@ public class ExportImportManager {
 
     public void runExport() {
         try {
+            //setting "export" attribute to session to be able to detect it on lower levels, see infinispan.RealmAdapter.orgAwareIdPModel
+            session.setAttribute(ExportImportConfig.ACTION_EXPORT, true);
             exportProvider.exportModel();
         } catch (IOException e) {
             throw new RuntimeException("Failed to run export", e);

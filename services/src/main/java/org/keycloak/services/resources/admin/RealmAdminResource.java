@@ -76,6 +76,7 @@ import org.keycloak.events.admin.ResourceType;
 import org.keycloak.exportimport.ClientDescriptionConverter;
 import org.keycloak.exportimport.ClientDescriptionConverterFactory;
 import org.keycloak.exportimport.ExportAdapter;
+import org.keycloak.exportimport.ExportImportConfig;
 import org.keycloak.exportimport.ExportOptions;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.ClientScopeModel;
@@ -1192,6 +1193,8 @@ public class RealmAdminResource {
 
         Response.ResponseBuilder response = Response.ok();
 
+        //setting "export" attribute to session to be able to detect it on lower levels, see infinispan.RealmAdapter.orgAwareIdPModel
+        session.setAttribute(ExportImportConfig.ACTION_EXPORT, true);
         exportProvider.exportRealm(realm, options, new ExportAdapter() {
             @Override
             public void setType(String mediaType) {

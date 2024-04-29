@@ -91,7 +91,7 @@ public final class OrganizationAdapter implements OrganizationModel, JpaModel<Or
 
     @Override
     public boolean isEnabled() {
-        return entity.isEnabled();
+        return provider.isEnabled() && entity.isEnabled();
     }
 
     @Override

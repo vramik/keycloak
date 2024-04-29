@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
+import java.io.IOException;
 import org.junit.Test;
 import org.keycloak.admin.client.resource.OrganizationResource;
 import org.keycloak.admin.client.resource.RealmResource;
@@ -51,6 +52,7 @@ import org.keycloak.representations.idm.OrganizationDomainRepresentation;
 import org.keycloak.representations.idm.OrganizationRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.testsuite.arquillian.annotation.EnableFeature;
+import org.keycloak.testsuite.updaters.RealmAttributeUpdater;
 import org.keycloak.testsuite.util.RealmBuilder;
 
 @EnableFeature(Feature.ORGANIZATION)
@@ -371,6 +373,33 @@ public class OrganizationTest extends AbstractOrganizationTest {
         assertFalse(existing.getDomains().isEmpty());
         assertEquals(1, existing.getDomains().size());
         assertNotNull(existing.getDomain("acme.com"));
+    }
+
+    @Test
+    public void testDisabledOrganizationProvider() throws IOException {
+        OrganizationRepresentation existing = createOrganization("acme", "acme.org", "acme.net");
+        // disable the organization provider and try to access REST endpoints
+        try (RealmAttributeUpdater rau = new RealmAttributeUpdater(testRealm())
+                .setOrganizationEnabled(Boolean.FALSE)
+                .update()) {
+            OrganizationRepresentation org = createRepresentation("some", "some.com");
+
+            try (Response response = testRealm().organizations().create(org)) {
+                assertEquals(Status.NOT_FOUND.getStatusCode(), response.getStatus());
+            }
+            try {
+                testRealm().organizations().getAll();
+                fail("Expected NotFoundException");
+            } catch (NotFoundException expected) {}
+            try {
+                testRealm().organizations().search("*");
+                fail("Expected NotFoundException");
+            } catch (NotFoundException expected) {}
+            try {
+                testRealm().organizations().get(existing.getId()).toRepresentation();
+                fail("Expected NotFoundException");
+            } catch (NotFoundException expected) {}
+        }
     }
 
     @Test

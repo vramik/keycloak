@@ -17,6 +17,8 @@
 
 package org.keycloak.testsuite.organization.admin;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -24,7 +26,6 @@ import static org.keycloak.testsuite.broker.BrokerTestTools.waitForPage;
 
 import java.util.List;
 import java.util.function.Function;
-
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 import org.jboss.arquillian.graphene.page.Page;
@@ -78,6 +79,7 @@ public abstract class AbstractOrganizationTest extends AbstractAdminTest  {
     public void configureTestRealm(RealmRepresentation testRealm) {
         testRealm.getClients().addAll(bc.createConsumerClients());
         testRealm.setSmtpServer(null);
+        testRealm.setOrganizationsEnabled(Boolean.TRUE);
         super.configureTestRealm(testRealm);
     }
 
@@ -188,7 +190,8 @@ public abstract class AbstractOrganizationTest extends AbstractAdminTest  {
         log.debug("Updating info on updateAccount page");
         assertFalse(driver.getPageSource().contains("kc.org"));
         updateAccountInformationPage.updateAccountInformation(bc.getUserLogin(), email, "Firstname", "Lastname");
-
+        assertThat(appPage.getRequestType(),is(AppPage.RequestType.AUTH_RESPONSE));
+        
         assertIsMember(email, organization);
     }
 
