@@ -404,33 +404,38 @@ public class OrganizationTest extends AbstractOrganizationTest {
 
     @Test
     public void testDeleteRealm() {
-        RealmRepresentation realmRep = RealmBuilder.create().name(KeycloakModelUtils.generateId()).build();
-        RealmResource realm = realmsResouce().realm(realmRep.getRealm());
+        RealmRepresentation realmRep = RealmBuilder.create()
+                .name(KeycloakModelUtils.generateId())
+                .organizationEnabled(true)
+                .build();
+        RealmResource realmRes = realmsResouce().realm(realmRep.getRealm());
 
         try {
             realmRep.setEnabled(true);
             realmsResouce().create(realmRep);
-            realm = realmsResouce().realm(realmRep.getRealm());
-            realm.toRepresentation();
+            realmRes = realmsResouce().realm(realmRep.getRealm());
+            realmRes.toRepresentation();
             OrganizationRepresentation org = new OrganizationRepresentation();
             org.setName("test-org");
             org.addDomain(new OrganizationDomainRepresentation("test.org"));
             org.setEnabled(true);
-            Response response = realm.organizations().create(org);
-            response.close();
-            assertEquals(Status.CREATED.getStatusCode(), response.getStatus());
-            List<OrganizationRepresentation> orgs = realm.organizations().getAll();
-            assertEquals(1, orgs.size());
+            try (Response response = realmRes.organizations().create(org)) {
+                assertEquals(Status.CREATED.getStatusCode(), response.getStatus());
+            }
+
+            List<OrganizationRepresentation> orgs = realmRes.organizations().getAll();
+            assertThat(orgs, hasSize(1));
+
             IdentityProviderRepresentation broker = bc.setUpIdentityProvider();
             broker.setAlias(KeycloakModelUtils.generateId());
-            response = realm.identityProviders().create(broker);
-            response.close();
-            assertEquals(Status.CREATED.getStatusCode(), response.getStatus());
-            response = realm.organizations().get(orgs.get(0).getId()).identityProviders().addIdentityProvider(broker.getAlias());
-            response.close();
-            assertEquals(Status.NO_CONTENT.getStatusCode(), response.getStatus());
+            try (Response response = realmRes.identityProviders().create(broker)) {
+                assertEquals(Status.CREATED.getStatusCode(), response.getStatus());
+            }
+            try (Response response = realmRes.organizations().get(orgs.get(0).getId()).identityProviders().addIdentityProvider(broker.getAlias())) {
+                assertEquals(Status.NO_CONTENT.getStatusCode(), response.getStatus());
+            }
         } finally {
-            realm.remove();
+            realmRes.remove();
         }
     }
 }

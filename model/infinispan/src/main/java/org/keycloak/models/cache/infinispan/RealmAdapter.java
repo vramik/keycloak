@@ -862,21 +862,21 @@ public class RealmAdapter implements CachedRealmModel {
 
     @Override
     public Stream<IdentityProviderModel> getIdentityProvidersStream() {
-        if (isUpdated()) return updated.getIdentityProvidersStream().map(this::orgsEnabledAwareIdPModel);
-        return cached.getIdentityProviders().stream().map(this::orgsEnabledAwareIdPModel);
+        if (isUpdated()) return updated.getIdentityProvidersStream().map(this::createOrganizationAwareIdentityProviderModel);
+        return cached.getIdentityProviders().stream().map(this::createOrganizationAwareIdentityProviderModel);
     }
 
     @Override
     public IdentityProviderModel getIdentityProviderByAlias(String alias) {
-        if (isUpdated()) return orgsEnabledAwareIdPModel(updated.getIdentityProviderByAlias(alias));
+        if (isUpdated()) return createOrganizationAwareIdentityProviderModel(updated.getIdentityProviderByAlias(alias));
         return getIdentityProvidersStream()
                 .filter(model -> Objects.equals(model.getAlias(), alias))
                 .findFirst()
-                .map(this::orgsEnabledAwareIdPModel)
+                .map(this::createOrganizationAwareIdentityProviderModel)
                 .orElse(null);
     }
 
-    private IdentityProviderModel orgsEnabledAwareIdPModel(IdentityProviderModel idp) {
+    private IdentityProviderModel createOrganizationAwareIdentityProviderModel(IdentityProviderModel idp) {
         if (!Profile.isFeatureEnabled(Profile.Feature.ORGANIZATION)) return idp;
         return new IdentityProviderModel(idp) {
             @Override

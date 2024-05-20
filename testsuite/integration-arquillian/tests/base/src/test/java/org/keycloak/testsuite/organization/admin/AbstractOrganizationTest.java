@@ -49,6 +49,7 @@ import org.keycloak.testsuite.pages.AppPage;
 import org.keycloak.testsuite.pages.IdpConfirmLinkPage;
 import org.keycloak.testsuite.pages.LoginPage;
 import org.keycloak.testsuite.pages.UpdateAccountInformationPage;
+import org.keycloak.testsuite.util.TestCleanup;
 
 /**
  * @author <a href="mailto:psilva@redhat.com">Pedro Igor</a>
@@ -98,25 +99,28 @@ public abstract class AbstractOrganizationTest extends AbstractAdminTest  {
     }
 
     protected OrganizationRepresentation createOrganization(String name, String... orgDomain) {
+        return createOrganization(testRealm(), getCleanup(), name, brokerConfigFunction.apply(name).setUpIdentityProvider(), orgDomain);
+    }
+
+    protected static OrganizationRepresentation createOrganization(RealmResource testRealm, TestCleanup testCleanup, String name, IdentityProviderRepresentation broker, String... orgDomain) {
         OrganizationRepresentation org = createRepresentation(name, orgDomain);
         String id;
 
-        try (Response response = testRealm().organizations().create(org)) {
+        try (Response response = testRealm.organizations().create(org)) {
             assertEquals(Status.CREATED.getStatusCode(), response.getStatus());
             id = ApiUtil.getCreatedId(response);
         }
-        IdentityProviderRepresentation broker = brokerConfigFunction.apply(name).setUpIdentityProvider();
         broker.getConfig().put(OrganizationModel.ORGANIZATION_DOMAIN_ATTRIBUTE, org.getDomains().iterator().next().getName());
-        testRealm().identityProviders().create(broker).close();
-        getCleanup().addCleanup(testRealm().identityProviders().get(broker.getAlias())::remove);
-        testRealm().organizations().get(id).identityProviders().addIdentityProvider(broker.getAlias()).close();
-        org = testRealm().organizations().get(id).toRepresentation();
-        getCleanup().addCleanup(() -> testRealm().organizations().get(id).delete().close());
+        testRealm.identityProviders().create(broker).close();
+        testCleanup.addCleanup(testRealm.identityProviders().get(broker.getAlias())::remove);
+        testRealm.organizations().get(id).identityProviders().addIdentityProvider(broker.getAlias()).close();
+        org = testRealm.organizations().get(id).toRepresentation();
+        testCleanup.addCleanup(() -> testRealm.organizations().get(id).delete().close());
 
         return org;
     }
 
-    protected OrganizationRepresentation createRepresentation(String name, String... orgDomains) {
+    protected static OrganizationRepresentation createRepresentation(String name, String... orgDomains) {
         OrganizationRepresentation org = new OrganizationRepresentation();
         org.setName(name);
 
