@@ -92,12 +92,10 @@ public class InfinispanIDPProvider implements IDPProvider {
         }
 
         if (cached == null) {
-            Long loaded = realmCache.getCache().getCurrentRevision(internalId);
             IdentityProviderModel model = idpDelegate.getById(internalId);
             if (model == null) return null;
             if (isInvalid(internalId)) return model;
-            cached = new CachedIdentityProvider(loaded, getRealm(), internalId, model);
-            realmCache.getCache().addRevisioned(cached, realmCache.getStartupRevision());
+            cached = cacheIdp(model);
         } else if (isInvalid(internalId)) {
             return idpDelegate.getById(internalId);
         }
@@ -120,13 +118,11 @@ public class InfinispanIDPProvider implements IDPProvider {
         }
 
         if (cached == null) {
-            Long loaded = realmCache.getCache().getCurrentRevision(cacheKey);
             IdentityProviderModel model = idpDelegate.getByAlias(alias);
             if (model == null) {
                 return null;
             }
-            cached = new CachedIdentityProvider(loaded, getRealm(), cacheKey, model);
-            realmCache.getCache().addRevisioned(cached, realmCache.getStartupRevision());
+            cached = cacheIdp(model);
         }
 
         return cached.getIdentityProvider();
@@ -163,6 +159,22 @@ public class InfinispanIDPProvider implements IDPProvider {
     @Override
     public void close() {
         idpDelegate.close();
+    }
+
+    private CachedIdentityProvider cacheIdp(IdentityProviderModel model) {
+        String internalId = model.getInternalId();
+        Long loadedById = realmCache.getCache().getCurrentRevision(internalId);
+        CachedIdentityProvider cached = new CachedIdentityProvider(loadedById, getRealm(), internalId, model);
+
+        realmCache.getCache().addRevisioned(cached, realmCache.getStartupRevision());
+
+        String alias = model.getAlias();
+        Long loadedByAlias = realmCache.getCache().getCurrentRevision(alias);
+        cached = new CachedIdentityProvider(loadedByAlias, getRealm(), alias, model);
+
+        realmCache.getCache().addRevisioned(cached, realmCache.getStartupRevision());
+
+        return cached;
     }
 
     private void registerIDPInvalidation(IdentityProviderModel idp) {
