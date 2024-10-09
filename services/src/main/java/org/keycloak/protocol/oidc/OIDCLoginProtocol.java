@@ -422,7 +422,7 @@ public class OIDCLoginProtocol implements LoginProtocol {
                 return new OAuth2ErrorRepresentation(OAuthErrorException.ACCESS_DENIED, "User cancelled aplication-initiated action.");
             case CANCELLED_BY_USER:
             case CONSENT_DENIED:
-                return new OAuth2ErrorRepresentation(OAuthErrorException.ACCESS_DENIED, null);
+                return new OAuth2ErrorRepresentation(OAuthErrorException.ACCESS_DENIED, "Declined by user.");
             case PASSIVE_INTERACTION_REQUIRED:
                 return new OAuth2ErrorRepresentation(OAuthErrorException.INTERACTION_REQUIRED, null);
             case PASSIVE_LOGIN_REQUIRED:
