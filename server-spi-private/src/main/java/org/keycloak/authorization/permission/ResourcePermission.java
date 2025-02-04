@@ -44,6 +44,12 @@ public class ResourcePermission {
     private ResourceServer resourceServer;
     private Map<String, Set<String>> claims;
     private boolean granted;
+    private boolean typed = true;
+
+    public ResourcePermission(Resource resource, Collection<Scope> scopes, ResourceServer resourceServer, boolean typed) {
+        this(resource, scopes, resourceServer);
+        this.typed = typed;
+    }
 
     public ResourcePermission(Resource resource, Collection<Scope> scopes, ResourceServer resourceServer) {
         this(resource, scopes, resourceServer, null);
@@ -63,6 +69,14 @@ public class ResourcePermission {
                 this.claims.computeIfAbsent(entry.getKey(), key -> new LinkedHashSet<>()).addAll(entry.getValue());
             }
         }
+    }
+
+    public boolean isTyped() {
+        return !(!typed || resource == null || resource.getType() == null);
+    }
+
+    public void setTyped(boolean typed) {
+        this.typed = typed;
     }
 
     /**

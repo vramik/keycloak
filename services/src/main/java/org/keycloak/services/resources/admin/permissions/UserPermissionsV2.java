@@ -115,21 +115,28 @@ class UserPermissionsV2 extends UserPermissions {
         }
 
         Resource resource = user == null ? null : resourceStore.findByName(server, user.getId());
+        boolean typed = true;
 
         if (resource == null) {
             resource = resourceStore.findByName(server, AdminPermissionsSchema.USERS_RESOURCE_TYPE, server.getId());
+            Policy allUsersPolicy = policyStore.findByName(server, AdminPermissionsSchema.USERS_RESOURCE_TYPE);
+            if (allUsersPolicy == null) {
+                typed = false;
+            }
         }
 
         Collection<Permission> permissions = (context == null) ?
-                root.evaluatePermission(new ResourcePermission(resource, resource.getScopes(), server), server) :
-                root.evaluatePermission(new ResourcePermission(resource, resource.getScopes(), server), server, context);
+                root.evaluatePermission(new ResourcePermission(resource, resource.getScopes(), server, typed), server) :
+                root.evaluatePermission(new ResourcePermission(resource, resource.getScopes(), server, typed), server, context);
 
         List<String> expectedScopes = Arrays.asList(scopes);
 
         for (Permission permission : permissions) {
-            for (String scope : permission.getScopes()) {
-                if (expectedScopes.contains(scope)) {
-                    return true;
+            if (permission.getResourceId().equals(resource.getId())) {
+                for (String scope : permission.getScopes()) {
+                    if (expectedScopes.contains(scope)) {
+                        return true;
+                    }
                 }
             }
         }

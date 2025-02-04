@@ -70,7 +70,7 @@ public class DefaultPolicyEvaluator implements PolicyEvaluator {
         if (resource != null) {
             policyStore.findByResource(resourceServer, resource, policyConsumer);
 
-            if (resource.getType() != null) {
+            if (permission.isTyped()) {
                 policyStore.findByResourceType(resourceServer, resource.getType(), policyConsumer);
 
                 if (!resource.getOwner().equals(resourceServer.getClientId())) {
