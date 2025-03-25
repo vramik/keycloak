@@ -341,7 +341,7 @@ class GroupPermissions implements GroupPermissionEvaluator, GroupPermissionManag
     }
 
     @Override
-    public boolean canManageMembers(GroupModel group) {
+    public Boolean canManageMembers(GroupModel group) {
         if (root.users().canManage()) return true;
 
         if (!root.isAdminSameRealm()) {

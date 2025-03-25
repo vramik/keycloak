@@ -16,6 +16,7 @@
  */
 package org.keycloak.services.resources.admin.permissions;
 
+import static java.lang.Boolean.TRUE;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -52,7 +53,7 @@ class GroupPermissionsV2 extends GroupPermissions {
             return true;
         }
 
-        return hasPermission(null, AdminPermissionsSchema.VIEW, AdminPermissionsSchema.MANAGE);
+        return TRUE.equals(hasPermission(null, AdminPermissionsSchema.VIEW, AdminPermissionsSchema.MANAGE));
     }
 
     @Override
@@ -61,7 +62,7 @@ class GroupPermissionsV2 extends GroupPermissions {
             return true;
         }
 
-        return hasPermission(group.getId(), AdminPermissionsSchema.VIEW, AdminPermissionsSchema.MANAGE);
+        return TRUE.equals(hasPermission(group.getId(), AdminPermissionsSchema.VIEW, AdminPermissionsSchema.MANAGE));
     }
 
     @Override
@@ -70,7 +71,7 @@ class GroupPermissionsV2 extends GroupPermissions {
             return true;
         }
 
-        return hasPermission(null, AdminPermissionsSchema.VIEW, AdminPermissionsSchema.MANAGE);
+        return TRUE.equals(hasPermission(null, AdminPermissionsSchema.VIEW, AdminPermissionsSchema.MANAGE));
     }
 
     @Override
@@ -79,20 +80,18 @@ class GroupPermissionsV2 extends GroupPermissions {
             return true;
         }
 
-        return hasPermission(group.getId(), AdminPermissionsSchema.MANAGE);
+        return TRUE.equals(hasPermission(group.getId(), AdminPermissionsSchema.MANAGE));
     }
 
     @Override
     public boolean canViewMembers(GroupModel group) {
         if (root.users().canView()) return true;
 
-        return hasPermission(group.getId(), AdminPermissionsSchema.VIEW_MEMBERS, AdminPermissionsSchema.MANAGE_MEMBERS);
+        return TRUE.equals(hasPermission(group.getId(), AdminPermissionsSchema.VIEW_MEMBERS, AdminPermissionsSchema.MANAGE_MEMBERS));
     }
 
     @Override
-    public boolean canManageMembers(GroupModel group) {
-        if (root.users().canManage()) return true;
-
+    public Boolean canManageMembers(GroupModel group) {
         return hasPermission(group.getId(), AdminPermissionsSchema.MANAGE_MEMBERS);
     }
 
@@ -102,7 +101,7 @@ class GroupPermissionsV2 extends GroupPermissions {
             return true;
         }
 
-        return hasPermission(group.getId(), AdminPermissionsSchema.MANAGE, AdminPermissionsSchema.MANAGE_MEMBERSHIP);
+        return TRUE.equals(hasPermission(group.getId(), AdminPermissionsSchema.MANAGE, AdminPermissionsSchema.MANAGE_MEMBERSHIP));
     }
 
     @Override
@@ -132,7 +131,7 @@ class GroupPermissionsV2 extends GroupPermissions {
         return granted;
     }
 
-    private boolean hasPermission(String groupId, String... scopes) {
+    private Boolean hasPermission(String groupId, String... scopes) {
         if (!root.isAdminSameRealm()) {
             return false;
         }
@@ -150,7 +149,7 @@ class GroupPermissionsV2 extends GroupPermissions {
 
             // check if there is a permission for "all-groups". If so, proceed with the evaluation to check scopes
             if (policyStore.findByResource(server, resource).isEmpty()) {
-                return false;
+                return null;
             }
         }
 

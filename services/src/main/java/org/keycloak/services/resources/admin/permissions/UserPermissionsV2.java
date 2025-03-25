@@ -16,10 +16,16 @@
  */
 package org.keycloak.services.resources.admin.permissions;
 
+import static java.lang.Boolean.TRUE;
+
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
 
 import org.keycloak.authorization.AdminPermissionsSchema;
 import org.keycloak.authorization.AuthorizationProvider;
@@ -32,6 +38,7 @@ import org.keycloak.authorization.permission.ResourcePermission;
 import org.keycloak.authorization.policy.evaluation.EvaluationContext;
 import org.keycloak.models.AdminRoles;
 import org.keycloak.models.ClientModel;
+import org.keycloak.models.GroupModel;
 import org.keycloak.models.ImpersonationConstants;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.UserModel;
@@ -49,7 +56,7 @@ class UserPermissionsV2 extends UserPermissions {
             return true;
         }
 
-        return hasPermission(user, null, AdminPermissionsSchema.VIEW, AdminPermissionsSchema.MANAGE) || canViewByGroup(user);
+        return TRUE.equals(hasPermission(user, null, AdminPermissionsSchema.VIEW, AdminPermissionsSchema.MANAGE)) || canViewByGroup(user);
     }
 
     @Override
@@ -58,7 +65,7 @@ class UserPermissionsV2 extends UserPermissions {
             return true;
         }
 
-        return hasPermission((UserModel) null, null, AdminPermissionsSchema.VIEW, AdminPermissionsSchema.MANAGE);
+        return TRUE.equals(hasPermission((UserModel) null, null, AdminPermissionsSchema.VIEW, AdminPermissionsSchema.MANAGE));
     }
 
     @Override
@@ -67,7 +74,23 @@ class UserPermissionsV2 extends UserPermissions {
             return true;
         }
 
-        return hasPermission(user, null, AdminPermissionsSchema.MANAGE) || canManageByGroup(user);
+        Boolean canManage = hasPermission(user, null, AdminPermissionsSchema.MANAGE);
+
+        // user permission exists and was evaluated to false
+        if (canManage != null && !canManage) {
+            return false;
+        }
+
+        Boolean canManageByGroup = canManageByGroup(user);
+
+        // user permission exists and was evaluated to true -> check group permission
+        if (canManage != null) {
+            // group permission does not exist or is evaluated to true
+            return canManageByGroup == null || canManageByGroup;
+        }
+
+        // user permission does not exist -> if group permission exists, return the outcome, otherwise return false
+        return canManageByGroup != null && canManageByGroup;
     }
 
     @Override
@@ -79,7 +102,7 @@ class UserPermissionsV2 extends UserPermissions {
         DefaultEvaluationContext context = requester == null ? null :
                 new DefaultEvaluationContext(new UserModelIdentity(root.realm, user), Map.of("kc.client.id", List.of(requester.getClientId())), session);
 
-        return hasPermission(user, context, AdminPermissionsSchema.IMPERSONATE);
+        return TRUE.equals(hasPermission(user, context, AdminPermissionsSchema.IMPERSONATE));
     }
 
     @Override
@@ -88,7 +111,7 @@ class UserPermissionsV2 extends UserPermissions {
             return true;
         }
 
-        return hasPermission(user, null, AdminPermissionsSchema.MANAGE, AdminPermissionsSchema.MAP_ROLES) || canManageByGroup(user);
+        return TRUE.equals(hasPermission(user, null, AdminPermissionsSchema.MANAGE, AdminPermissionsSchema.MAP_ROLES)) || canManageByGroup(user);
     }
 
     @Override
@@ -97,10 +120,10 @@ class UserPermissionsV2 extends UserPermissions {
             return true;
         }
 
-        return hasPermission(user, null, AdminPermissionsSchema.MANAGE, AdminPermissionsSchema.MANAGE_GROUP_MEMBERSHIP) || canManageByGroup(user);
+        return TRUE.equals(hasPermission(user, null, AdminPermissionsSchema.MANAGE, AdminPermissionsSchema.MANAGE_GROUP_MEMBERSHIP)) || canManageByGroup(user);
     }
 
-    private boolean hasPermission(UserModel user, EvaluationContext context, String... scopes) {
+    private Boolean hasPermission(UserModel user, EvaluationContext context, String... scopes) {
         if (!root.isAdminSameRealm()) {
             return false;
         }
@@ -118,7 +141,7 @@ class UserPermissionsV2 extends UserPermissions {
             resource = AdminPermissionsSchema.SCHEMA.getResourceTypeResource(session, server, AdminPermissionsSchema.USERS_RESOURCE_TYPE);
 
             if (policyStore.findByResource(server, resource).isEmpty()) {
-                return false;
+                return null;
             }
         }
 
@@ -139,6 +162,33 @@ class UserPermissionsV2 extends UserPermissions {
         }
 
         return false;
+    }
+
+    private Boolean evaluateHierarchy(UserModel user, Function<GroupModel, Boolean> eval) {
+        Set<GroupModel> visited = new HashSet<>();
+        return user.getGroupsStream()
+                .map(group -> evaluateHierarchy(eval, group, visited))
+                .filter(Objects::nonNull) // Ensure null is propagated correctly
+                .findFirst()
+                .orElse(null); // Propagate null if all results are null
+    }
+
+    private Boolean evaluateHierarchy(Function<GroupModel, Boolean> eval, GroupModel group, Set<GroupModel> visited) {
+        if (visited.contains(group)) return false;
+        visited.add(group);
+
+        Boolean result = eval.apply(group); // This can return true, false, or null
+        if (result != null) {
+            return result; // Propagate true or false
+        }
+
+        if (group.getParent() == null) return false;
+
+        return evaluateHierarchy(eval, group.getParent(), visited);
+    }
+
+    private Boolean canManageByGroup(UserModel user) {
+        return evaluateHierarchy(user, group -> root.groups().canManageMembers(group));
     }
 
     // todo this method should be removed and replaced by canImpersonate(user, client); once V1 is removed
