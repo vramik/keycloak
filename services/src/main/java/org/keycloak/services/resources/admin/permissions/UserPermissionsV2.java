@@ -123,6 +123,9 @@ class UserPermissionsV2 extends UserPermissions {
         return TRUE.equals(hasPermission(user, null, AdminPermissionsSchema.MANAGE, AdminPermissionsSchema.MANAGE_GROUP_MEMBERSHIP)) || canManageByGroup(user);
     }
 
+    /**
+     * It may return {@code null} indicating there is no permission present.
+     */
     private Boolean hasPermission(UserModel user, EvaluationContext context, String... scopes) {
         if (!root.isAdminSameRealm()) {
             return false;

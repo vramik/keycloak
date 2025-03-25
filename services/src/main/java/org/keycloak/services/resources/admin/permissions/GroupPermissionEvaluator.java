@@ -102,10 +102,10 @@ public interface GroupPermissionEvaluator {
     void requireViewMembers(GroupModel group);
 
     /**
-     * TODO
-     * Returns {@code true} if {@link UserPermissionEvaluator#canManage()} evaluates to {@code true}.
+     * For V1 only: Returns {@code true} if {@link UserPermissionEvaluator#canManage()} evaluates to {@code true}. Or:
      * <p/>
-     * Or if it has a permission to {@link AdminPermissionsSchema#MANAGE_MEMBERS} of the group.
+     * If it has a permission to {@link AdminPermissionsSchema#MANAGE_MEMBERS} of the group or 
+     * any parent in the group hierarchy.
      */
     Boolean canManageMembers(GroupModel group);
 

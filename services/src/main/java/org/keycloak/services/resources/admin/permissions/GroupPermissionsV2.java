@@ -131,6 +131,9 @@ class GroupPermissionsV2 extends GroupPermissions {
         return granted;
     }
 
+    /**
+     * It may return {@code null} indicating there is no permission present.
+     */
     private Boolean hasPermission(String groupId, String... scopes) {
         if (!root.isAdminSameRealm()) {
             return false;
