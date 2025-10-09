@@ -27,6 +27,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.GroupResource;
@@ -115,7 +116,7 @@ public class GroupTest extends AbstractGroupTest {
     CloseableHttpClient httpClient;
 
     
-    @Test
+    @RepeatedTest(100)
     public void createMultiDeleteMultiReadMulti() {
         // create multiple groups
         List<String> groupUuuids = new ArrayList<>();

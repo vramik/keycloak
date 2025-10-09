@@ -812,7 +812,7 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
 
         group.getSubGroupsStream().forEach(realm::removeGroup);
 
-        GroupEntity groupEntity = em.find(GroupEntity.class, group.getId(), LockModeType.PESSIMISTIC_WRITE);
+        GroupEntity groupEntity = em.find(GroupEntity.class, group.getId());
         if ((groupEntity == null) || (!groupEntity.getRealm().equals(realm.getId()))) {
             return false;
         }

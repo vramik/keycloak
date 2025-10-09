@@ -47,7 +47,16 @@ class MSSQLServerTestDatabase extends AbstractContainerTestDatabase {
 
     @Override
     public List<String> getPostStartCommand() {
-        return List.of("/opt/mssql-tools18/bin/sqlcmd", "-U", "sa", "-P", getPassword(), "-No", "-Q", "CREATE DATABASE " + getDatabase());
+        // Adding -N for encryption and -C to trust the self-signed certificate
+        String sqlCmdOptions = String.format("-U sa -P '%s' -N -C", getPassword());
+
+        String createDbCommand = String.format("/opt/mssql-tools18/bin/sqlcmd %s -Q 'CREATE DATABASE %s;'", sqlCmdOptions, getDatabase());
+        String alterDbCommand = String.format("/opt/mssql-tools18/bin/sqlcmd %s -d %s -Q 'ALTER DATABASE %s SET READ_COMMITTED_SNAPSHOT ON;'", sqlCmdOptions, getDatabase(), getDatabase());
+
+        // Redirect stdout and stderr (2>&1) of the whole sequence to a log file for debugging
+        String fullCommand = String.format("(%s && %s) > /tmp/setup-script.log 2>&1", createDbCommand, alterDbCommand);
+
+        return List.of("sh", "-c", fullCommand);
     }
 
     @Override
