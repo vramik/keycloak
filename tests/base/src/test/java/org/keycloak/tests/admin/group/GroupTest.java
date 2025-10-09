@@ -116,7 +116,7 @@ public class GroupTest extends AbstractGroupTest {
     CloseableHttpClient httpClient;
 
     
-    @RepeatedTest(100)
+    @RepeatedTest(300)
     public void createMultiDeleteMultiReadMulti() {
         // create multiple groups
         List<String> groupUuuids = new ArrayList<>();
