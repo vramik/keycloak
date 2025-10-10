@@ -804,7 +804,7 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
                 return session;
             }
         };
-//        session.getKeycloakSessionFactory().publish(event);
+        session.getKeycloakSessionFactory().publish(event);
 
 //        session.users().preRemove(realm, group);
 
