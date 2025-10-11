@@ -808,7 +808,7 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
 
         session.users().preRemove(realm, group);
 
-//        realm.removeDefaultGroup(group);
+        realm.removeDefaultGroup(group);
 
 //        group.getSubGroupsStream().forEach(realm::removeGroup);
 
