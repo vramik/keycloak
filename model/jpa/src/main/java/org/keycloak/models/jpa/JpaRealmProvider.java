@@ -808,15 +808,15 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
 
         session.users().preRemove(realm, group);
 
-        realm.removeDefaultGroup(group);
+//        realm.removeDefaultGroup(group);
 
-//        group.getSubGroupsStream().forEach(realm::removeGroup);
+        group.getSubGroupsStream().forEach(realm::removeGroup);
 
         GroupEntity groupEntity = em.find(GroupEntity.class, group.getId(), LockModeType.PESSIMISTIC_WRITE);
         if ((groupEntity == null) || (!groupEntity.getRealm().equals(realm.getId()))) {
             return false;
         }
-//        em.createNamedQuery("deleteGroupRoleMappingsByGroup").setParameter("group", groupEntity).executeUpdate();
+        em.createNamedQuery("deleteGroupRoleMappingsByGroup").setParameter("group", groupEntity).executeUpdate();
 
         em.remove(groupEntity);
         return true;
