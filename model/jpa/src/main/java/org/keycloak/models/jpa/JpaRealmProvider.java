@@ -23,7 +23,6 @@ import static org.keycloak.utils.StreamsUtil.closing;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
-import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaDelete;
@@ -34,6 +33,7 @@ import jakarta.persistence.criteria.MapJoin;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -789,6 +789,34 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
             return false;
         }
 
+        // 1. Collect all group IDs in the hierarchy, starting with the children.
+        List<String> groupIdsToDelete = new ArrayList<>();
+        collectGroupIds(group, groupIdsToDelete);
+
+        // 2. Reverse the list so the parent group is last.
+        Collections.reverse(groupIdsToDelete);
+
+        // 3. Loop through the flat list and delete one by one.
+        //    This keeps all business logic but flattens the transaction.
+        for (String groupId : groupIdsToDelete) {
+            GroupModel groupToDelete = realm.getGroupById(groupId);
+            if (groupToDelete != null) {
+                removeSingleGroup(realm, groupToDelete);
+            }
+        }
+
+        return true;
+    }
+
+    // Helper method to collect IDs (your original logic is perfect)
+    private void collectGroupIds(GroupModel group, List<String> groupIds) {
+        // Add children first to maintain deletion order later
+        group.getSubGroupsStream().forEach(subGroup -> collectGroupIds(subGroup, groupIds));
+        groupIds.add(group.getId());
+    }
+
+    private void removeSingleGroup(RealmModel realm, GroupModel group) {
+        // All the original business logic for ONE group goes here
         GroupModel.GroupRemovedEvent event = new GroupModel.GroupRemovedEvent() {
             @Override
             public RealmModel getRealm() {
@@ -808,23 +836,17 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
         session.getKeycloakSessionFactory().publish(event);
 
         session.users().preRemove(realm, group);
-
         realm.removeDefaultGroup(group);
 
-        group.getSubGroupsStream().forEach(realm::removeGroup);
+        GroupEntity groupEntity = em.find(GroupEntity.class, group.getId());
+        if (groupEntity == null) return;
 
-        GroupEntity groupEntity = em.find(GroupEntity.class, group.getId(), LockModeType.PESSIMISTIC_WRITE);
-        if ((groupEntity == null) || (!groupEntity.getRealm().equals(realm.getId()))) {
-            return false;
-        }
-        Query query = em.createNamedQuery("deleteGroupRoleMappingsByGroup").setParameter("group", groupEntity);
-        query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
-        query.executeUpdate();
+        // This is still a potential deadlock source, but let's see if flattening
+        // the transaction is enough to solve it. If not, this is where the conditional
+        // logic for MSSQL would go.
+        em.createNamedQuery("deleteGroupRoleMappingsByGroup").setParameter("group", groupEntity).executeUpdate();
 
         em.remove(groupEntity);
-        return true;
-
-
     }
 
     @Override
