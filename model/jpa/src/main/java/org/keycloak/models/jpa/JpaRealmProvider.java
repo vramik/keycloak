@@ -81,6 +81,7 @@ import org.keycloak.models.jpa.entities.ClientScopeClientMappingEntity;
 import org.keycloak.models.jpa.entities.ClientScopeEntity;
 import org.keycloak.models.jpa.entities.GroupAttributeEntity;
 import org.keycloak.models.jpa.entities.GroupEntity;
+import org.keycloak.models.jpa.entities.GroupRoleMappingEntity;
 import org.keycloak.models.jpa.entities.RealmEntity;
 import org.keycloak.models.jpa.entities.RealmLocalizationTextsEntity;
 import org.keycloak.models.jpa.entities.RoleEntity;
@@ -805,6 +806,12 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
             }
         }
 
+        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+        CriteriaDelete<GroupRoleMappingEntity> deleteQuery = criteriaBuilder.createCriteriaDelete(GroupRoleMappingEntity.class);
+        Root<GroupRoleMappingEntity> root = deleteQuery.from(GroupRoleMappingEntity.class);
+        deleteQuery.where(root.get("group").get("id").in(groupIdsToDelete));
+        em.createQuery(deleteQuery).executeUpdate();
+
         return true;
     }
 
@@ -840,11 +847,6 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
 
         GroupEntity groupEntity = em.find(GroupEntity.class, group.getId());
         if (groupEntity == null) return;
-
-        // This is still a potential deadlock source, but let's see if flattening
-        // the transaction is enough to solve it. If not, this is where the conditional
-        // logic for MSSQL would go.
-        em.createNamedQuery("deleteGroupRoleMappingsByGroup").setParameter("group", groupEntity).executeUpdate();
 
         em.remove(groupEntity);
     }
