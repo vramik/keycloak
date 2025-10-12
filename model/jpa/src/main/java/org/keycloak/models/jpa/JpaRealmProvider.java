@@ -33,7 +33,6 @@ import jakarta.persistence.criteria.MapJoin;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -790,24 +789,19 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
             return false;
         }
 
-        // 1. Collect all group IDs in the hierarchy, starting with the children.
+        // Collect all group IDs in the hierarchy, starting with the children.
         List<String> groupIdsToDelete = new ArrayList<>();
         collectGroupIds(group, groupIdsToDelete);
 
-        // 2. Reverse the list so the parent group is last.
-        Collections.reverse(groupIdsToDelete);
+        // Loop through the list and delete one by one.
+        groupIdsToDelete.stream().map(realm::getGroupById).filter(Objects::nonNull).forEach(groupToDelete -> removeSingleGroup(realm, groupToDelete));
 
-        // 3. Loop through the flat list and delete one by one.
-        //    This keeps all business logic but flattens the transaction.
-        for (String groupId : groupIdsToDelete) {
-            GroupModel groupToDelete = realm.getGroupById(groupId);
-            if (groupToDelete != null) {
-                removeSingleGroup(realm, groupToDelete);
-            }
+        if (getDBProductName().equals("Microsoft SQL Server")) {
+            // SQL Server needs to flush here to avoid deadlocks
+            em.flush();
         }
 
-        em.flush();
-
+        // Delete group role mappings in bulk
         CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
         CriteriaDelete<GroupRoleMappingEntity> deleteQuery = criteriaBuilder.createCriteriaDelete(GroupRoleMappingEntity.class);
         Root<GroupRoleMappingEntity> root = deleteQuery.from(GroupRoleMappingEntity.class);
@@ -817,7 +811,6 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
         return true;
     }
 
-    // Helper method to collect IDs (your original logic is perfect)
     private void collectGroupIds(GroupModel group, List<String> groupIds) {
         // Add children first to maintain deletion order later
         group.getSubGroupsStream().forEach(subGroup -> collectGroupIds(subGroup, groupIds));
@@ -825,7 +818,6 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
     }
 
     private void removeSingleGroup(RealmModel realm, GroupModel group) {
-        // All the original business logic for ONE group goes here
         GroupModel.GroupRemovedEvent event = new GroupModel.GroupRemovedEvent() {
             @Override
             public RealmModel getRealm() {
@@ -1043,8 +1035,7 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
 
         predicates.add(builder.equal(root.get("realmId"), realm.getId()));
 
-        //noinspection resource
-        String dbProductName = em.unwrap(Session.class).doReturningWork(connection -> connection.getMetaData().getDatabaseProductName());
+        String dbProductName = getDBProductName();
 
         for (Map.Entry<String, String> entry : filteredAttributes.entrySet()) {
             String key = entry.getKey();
@@ -1096,8 +1087,7 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
 
         predicates.add(builder.equal(root.get("realmId"), realm.getId()));
 
-        //noinspection resource
-        String dbProductName = em.unwrap(Session.class).doReturningWork(connection -> connection.getMetaData().getDatabaseProductName());
+        String dbProductName = getDBProductName();
 
         for (Map.Entry<String, String> entry : overrides.entrySet()) {
             String bindingName = entry.getKey();
@@ -1567,5 +1557,10 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
 
     private void fireGroupCreatedEvent(GroupAdapter group) {
         GroupCreatedEvent.fire(group, session);
+    }
+
+    private String getDBProductName() {
+        return em.unwrap(Session.class)
+                .doReturningWork(connection -> connection.getMetaData().getDatabaseProductName());
     }
 }
