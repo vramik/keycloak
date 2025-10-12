@@ -806,6 +806,8 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
             }
         }
 
+        em.flush();
+
         CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
         CriteriaDelete<GroupRoleMappingEntity> deleteQuery = criteriaBuilder.createCriteriaDelete(GroupRoleMappingEntity.class);
         Root<GroupRoleMappingEntity> root = deleteQuery.from(GroupRoleMappingEntity.class);
