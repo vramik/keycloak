@@ -23,6 +23,7 @@ import static org.keycloak.utils.StreamsUtil.closing;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaDelete;
@@ -808,7 +809,7 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
 
         session.users().preRemove(realm, group);
 
-//        realm.removeDefaultGroup(group);
+        realm.removeDefaultGroup(group);
 
         group.getSubGroupsStream().forEach(realm::removeGroup);
 
@@ -816,7 +817,9 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
         if ((groupEntity == null) || (!groupEntity.getRealm().equals(realm.getId()))) {
             return false;
         }
-        em.createNamedQuery("deleteGroupRoleMappingsByGroup").setParameter("group", groupEntity).executeUpdate();
+        Query query = em.createNamedQuery("deleteGroupRoleMappingsByGroup").setParameter("group", groupEntity);
+        query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
+        query.executeUpdate();
 
         em.remove(groupEntity);
         return true;
