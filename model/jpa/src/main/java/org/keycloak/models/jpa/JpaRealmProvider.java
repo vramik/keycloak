@@ -793,20 +793,20 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
         List<String> groupIdsToDelete = new ArrayList<>();
         collectGroupIds(group, groupIdsToDelete);
 
-        // Loop through the list and delete one by one.
-        groupIdsToDelete.stream().map(realm::getGroupById).filter(Objects::nonNull).forEach(groupToDelete -> removeSingleGroup(realm, groupToDelete));
-
-        if (getDBProductName().equals("Microsoft SQL Server")) {
-            // SQL Server needs to flush here to avoid deadlocks
-            em.flush();
-        }
-
         // Delete group role mappings in bulk
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaDelete<GroupRoleMappingEntity> deleteQuery = cb.createCriteriaDelete(GroupRoleMappingEntity.class);
         Root<GroupRoleMappingEntity> root = deleteQuery.from(GroupRoleMappingEntity.class);
         deleteQuery.where(root.join("group").get("id").in(groupIdsToDelete));
         em.createQuery(deleteQuery).executeUpdate();
+
+        if (getDBProductName().equals("Microsoft SQL Server")) {
+            // SQL Server needs to flush here to avoid deadlocks
+            em.flush();
+        }
+
+        // Loop through the list and delete one by one.
+        groupIdsToDelete.stream().map(realm::getGroupById).filter(Objects::nonNull).forEach(groupToDelete -> removeSingleGroup(realm, groupToDelete));
 
         return true;
     }
