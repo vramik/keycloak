@@ -837,9 +837,9 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
         session.getKeycloakSessionFactory().publish(event);
 
         session.users().preRemove(realm, group);
-        realm.removeDefaultGroup(group);
+//        realm.removeDefaultGroup(group);
 
-        GroupEntity groupEntity = em.find(GroupEntity.class, group.getId());
+        GroupEntity groupEntity = em.find(GroupEntity.class, group.getId(), LockModeType.PESSIMISTIC_WRITE);
         if (groupEntity == null) return;
 
         em.remove(groupEntity);
