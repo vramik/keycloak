@@ -802,10 +802,10 @@ public class JpaRealmProvider implements RealmProvider, ClientProvider, ClientSc
         }
 
         // Delete group role mappings in bulk
-        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
-        CriteriaDelete<GroupRoleMappingEntity> deleteQuery = criteriaBuilder.createCriteriaDelete(GroupRoleMappingEntity.class);
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaDelete<GroupRoleMappingEntity> deleteQuery = cb.createCriteriaDelete(GroupRoleMappingEntity.class);
         Root<GroupRoleMappingEntity> root = deleteQuery.from(GroupRoleMappingEntity.class);
-        deleteQuery.where(root.get("group").get("id").in(groupIdsToDelete));
+        deleteQuery.where(root.join("group").get("id").in(groupIdsToDelete));
         em.createQuery(deleteQuery).executeUpdate();
 
         return true;
