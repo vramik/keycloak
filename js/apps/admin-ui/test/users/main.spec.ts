@@ -140,6 +140,53 @@ test.describe("Existing users", () => {
     await assertNoResults(page);
   });
 
+  test("preserves quotes in search when paginating", async ({ page }) => {
+    // Create multiple users to enable pagination
+    const usersToCreate = Array.from({ length: 15 }, (_, i) => ({
+      username: `test-user-${i}`,
+    }));
+    await using testBed = await createTestBed({
+      users: usersToCreate,
+    });
+
+    // Set up request interception to verify search parameter
+    const requestUrls: string[] = [];
+    page.on("request", (request) => {
+      const url = request.url();
+      if (url.includes("/admin/realms/") && url.includes("/users")) {
+        requestUrls.push(url);
+      }
+    });
+
+    await login(page, { to: toUsers({ realm: testBed.realm }) });
+
+    // Search with quoted string
+    const searchTerm = '"test-user"';
+    await page.getByPlaceholder(placeHolder).fill(searchTerm);
+    await page.keyboard.press("Enter");
+
+    // Wait for the search to complete
+    await page.locator("table tbody").waitFor();
+
+    // Click next page button
+    await page
+      .getByLabel("Pagination bottom")
+      .getByLabel("Go to next page")
+      .click();
+
+    // Wait for the next page to load
+    await page.locator("table tbody").waitFor();
+
+    // Find the search requests (should be at least 2)
+    const searchRequests = requestUrls.filter((url) => url.includes("search="));
+    expect(searchRequests.length).toBeGreaterThanOrEqual(2);
+
+    // Verify all search requests contain the parameter with quotes (URL encoded as %22)
+    for (const url of searchRequests) {
+      expect(url).toContain("search=%22test-user%22");
+    }
+  });
+
   test("edits a user", async ({ page }) => {
     await using testBed = await createTestBed(overrides);
     const user = await adminClient.findUserByUsername(
