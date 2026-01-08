@@ -56,7 +56,7 @@
         </createTable>
 
         <modifySql dbms="mysql,mariadb">
-            <append value=" CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_ci"/>
+            <append value=" CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci"/>
         </modifySql>
     </changeSet>
 
