@@ -55,6 +55,10 @@
             <column name="INVITE_LINK" type="VARCHAR(2048)"/>
         </createTable>
 
+        <modifySql dbms="mysql">
+            <replace replace="VARCHAR" with="VARCHAR CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_ci"/>
+        </modifySql>
+
         <addForeignKeyConstraint baseTableName="ORG_INVITATION"
                                  baseColumnNames="ORGANIZATION_ID"
                                  constraintName="FK_ORG_INVITATION_ORG"
