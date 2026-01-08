@@ -33,18 +33,29 @@ public class JpaUpdate26_6_0_OrgTableCharset extends CustomKeycloakTask {
     protected void generateStatementsImpl() throws CustomChangeException {
         String orgTableName = getTableName("ORG");
 
-        // Fix ORG.ID column charset to utf8mb3 to ensure foreign key compatibility with ORG_INVITATION table
-        // Using utf8mb3 explicitly (not utf8) as per documentation and to avoid MySQL 8.0+ deprecation warnings
+        // Ensure ORG.ID column and its PRIMARY KEY index use the same charset & collation
         statements.add(new RawSqlStatement(
-            "ALTER TABLE " + orgTableName +
-            " MODIFY ID VARCHAR(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_ci NOT NULL"
+                "ALTER TABLE " + orgTableName + " DROP PRIMARY KEY"
         ));
 
-        confirmationMessage.append("Updated ORG.ID column charset to utf8mb3 for foreign key compatibility");
+        statements.add(new RawSqlStatement(
+                "ALTER TABLE " + orgTableName +
+                        " MODIFY ID VARCHAR(255) " +
+                        " CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_ci NOT NULL"
+        ));
+
+        statements.add(new RawSqlStatement(
+                "ALTER TABLE " + orgTableName + " ADD PRIMARY KEY (ID)"
+        ));
+
+        confirmationMessage.append(
+                "Updated ORG.ID column and PRIMARY KEY index to utf8mb3_unicode_ci for FK compatibility"
+        );
     }
 
     @Override
     protected String getTaskId() {
-        return "Update ORG table charset.";
+        return "Update ORG table charset and PK collation";
     }
 }
+
