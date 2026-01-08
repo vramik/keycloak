@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  ~ * Copyright 2026 Red Hat, Inc. and/or its affiliates
+  ~ * and other contributors as indicated by the @author tags.
+  ~ *
+  ~ * Licensed under the Apache License, Version 2.0 (the "License");
+  ~ * you may not use this file except in compliance with the License.
+  ~ * You may obtain a copy of the License at
+  ~ *
+  ~ * http://www.apache.org/licenses/LICENSE-2.0
+  ~ *
+  ~ * Unless required by applicable law or agreed to in writing, software
+  ~ * distributed under the License is distributed on an "AS IS" BASIS,
+  ~ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ * See the License for the specific language governing permissions and
+  ~ * limitations under the License.
+  -->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <!-- Fix ORG.ID charset for MySQL/MariaDB to allow foreign keys (#45239) -->
+    <changeSet author="keycloak" id="26.6.0-org-id-charset-mysql">
+        <preConditions onFail="MARK_RAN" onSqlOutput="TEST">
+            <or>
+                <dbms type="mysql"/>
+                <dbms type="mariadb"/>
+            </or>
+        </preConditions>
+        <customChange class="org.keycloak.connections.jpa.updater.liquibase.custom.JpaUpdate26_6_0_OrgTableCharset"/>
+    </changeSet>
+
+    <!-- Create ORG_INVITATION table both for users who failed the original migration due to charset issues and users migrating straight to 26.6 -->
+    <changeSet author="keycloak" id="26.6.0-invitations-table-fixed">
+        <preConditions onFail="MARK_RAN" onSqlOutput="TEST">
+            <not>
+                <changeSetExecuted id="26.5.0-invitations-table" author="keycloak" changeLogFile="META-INF/jpa-changelog-26.5.0.xml"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="ORG_INVITATION">
+            <column name="ID" type="VARCHAR(36)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="CONSTRAINT_ORG_INVITATION"/>
+            </column>
+            <column name="ORGANIZATION_ID" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="EMAIL" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="FIRST_NAME" type="VARCHAR(255)"/>
+            <column name="LAST_NAME" type="VARCHAR(255)"/>
+            <column name="CREATED_AT" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="EXPIRES_AT" type="INT"/>
+            <column name="INVITE_LINK" type="VARCHAR(2048)"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="ORG_INVITATION"
+                                 baseColumnNames="ORGANIZATION_ID"
+                                 constraintName="FK_ORG_INVITATION_ORG"
+                                 referencedTableName="ORG"
+                                 referencedColumnNames="ID"
+                                 onDelete="CASCADE"/>
+
+        <createIndex indexName="IDX_ORG_INVITATION_ORG_ID" tableName="ORG_INVITATION">
+            <column name="ORGANIZATION_ID"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_ORG_INVITATION_EMAIL" tableName="ORG_INVITATION">
+            <column name="EMAIL"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_ORG_INVITATION_EXPIRES" tableName="ORG_INVITATION">
+            <column name="EXPIRES_AT"/>
+        </createIndex>
+
+        <!-- Unique constraint to prevent duplicate active invitations for same email and organization -->
+        <addUniqueConstraint tableName="ORG_INVITATION"
+                             columnNames="ORGANIZATION_ID,EMAIL"
+                             constraintName="UK_ORG_INVITATION_EMAIL"/>
+    </changeSet>
+
+</databaseChangeLog>
