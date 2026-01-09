@@ -182,6 +182,25 @@
         </modifySql>
     </changeSet>
 
+    <changeSet author="keycloak" id="26.5.0-org-invitation-org-id-charset-mysql">
+        <preConditions onFail="MARK_RAN" onSqlOutput="TEST">
+            <and>
+                <or>
+                    <dbms type="mysql"/>
+                    <dbms type="mariadb"/>
+                </or>
+                <not>
+                    <changeSetExecuted id="26.5.0-invitations-table" author="keycloak" changeLogFile="META-INF/jpa-changelog-26.5.0.xml"/>
+                </not>
+            </and>
+        </preConditions>
+
+        <modifyDataType
+                tableName="ORG_INVITATION"
+                columnName="ORGANIZATION_ID"
+                newDataType="VARCHAR(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_ci"/>
+    </changeSet>
+
     <changeSet author="keycloak" id="26.5.0-invitations-table-fixed-fk">
         <preConditions onFail="MARK_RAN" onSqlOutput="TEST">
             <not>
