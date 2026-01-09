@@ -58,4 +58,3 @@ public class JpaUpdate26_6_0_OrgTableCharset extends CustomKeycloakTask {
         return "Update ORG table charset and PK collation";
     }
 }
-
