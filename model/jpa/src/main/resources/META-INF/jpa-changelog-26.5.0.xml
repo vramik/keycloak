@@ -148,9 +148,7 @@
                 </not>
             </and>
         </preConditions>
-        <sql dbms="mysql,mariadb">
-            ALTER TABLE ORG MODIFY ID VARCHAR(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_ci NOT NULL
-        </sql>
+        <customChange class="org.keycloak.connections.jpa.updater.liquibase.custom.JpaUpdate26_5_0_OrgTableCharset"/>
     </changeSet>
 
     <changeSet author="keycloak" id="26.5.0-invitations-table-fixed">
