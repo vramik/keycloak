@@ -6,9 +6,8 @@ import {
   Chip,
   ChipGroup,
   FormGroup,
-  TextInput,
 } from "@patternfly/react-core";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -33,7 +32,7 @@ export const GroupComponent = ({
   const [open, setOpen] = useState(false);
   const [openOrgGroups, setOpenOrgGroups] = useState(false);
   const [groups, setGroups] = useState<GroupRepresentation[]>();
-  const { control, getValues, setValue, watch } = useFormContext();
+  const { control, setValue } = useFormContext();
   const { adminClient } = useAdminClient();
   const serverInfo = useServerInfo();
   const hasLinkedOrganization = useGroupResource().isOrgGroups();
@@ -45,20 +44,6 @@ export const GroupComponent = ({
     groupTypes.find((t: string) => t === "REALM") || "REALM";
   const GROUP_TYPE_ORG =
     groupTypes.find((t: string) => t === "ORGANIZATION") || "ORGANIZATION";
-
-  // Watch the groupType field value from the form
-  const groupTypeValue = watch(groupTypeFieldName);
-
-  // Set default groupType on mount if needed
-  useEffect(() => {
-    const groupValue = getValues(convertToName(name!));
-    const existingGroupType = getValues(groupTypeFieldName);
-
-    if (!existingGroupType && hasLinkedOrganization && groupValue) {
-      // No groupType in loaded data, but there's a group - default to REALM
-      setValue(groupTypeFieldName, GROUP_TYPE_REALM);
-    }
-  }, []); // Run only once on mount
 
   return (
     <Controller
@@ -151,25 +136,6 @@ export const GroupComponent = ({
               )}
             </ActionList>
           </FormGroup>
-          {field.value &&
-            (hasLinkedOrganization || groupTypeValue === GROUP_TYPE_ORG) && (
-              <FormGroup
-                label={t("groupType")}
-                fieldId="groupType"
-                labelIcon={
-                  <HelpItem
-                    helpText={t("groupTypeHelp")}
-                    fieldLabelId="groupType"
-                  />
-                }
-              >
-                <TextInput
-                  id="groupType"
-                  value={groupTypeValue || GROUP_TYPE_REALM}
-                  readOnly
-                />
-              </FormGroup>
-            )}
         </>
       )}
     />
