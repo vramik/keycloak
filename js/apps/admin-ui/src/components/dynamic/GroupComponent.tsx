@@ -8,7 +8,7 @@ import {
   FormGroup,
 } from "@patternfly/react-core";
 import { useState } from "react";
-import { Controller, useFormContext } from "react-hook-form";
+import { Controller, useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import { HelpItem } from "@keycloak/keycloak-ui-shared";
@@ -44,6 +44,12 @@ export const GroupComponent = ({
     groupTypes.find((t: string) => t === "REALM") || "REALM";
   const GROUP_TYPE_ORG =
     groupTypes.find((t: string) => t === "ORGANIZATION") || "ORGANIZATION";
+
+  const groupType = useWatch({
+    name: "config.groupType",
+    control,
+    defaultValue: GROUP_TYPE_REALM,
+  });
 
   return (
     <Controller
@@ -122,7 +128,7 @@ export const GroupComponent = ({
                   {t("selectGroup")}
                 </Button>
               </ActionListItem>
-              {hasLinkedOrganization && (
+              {(hasLinkedOrganization || groupType === GROUP_TYPE_ORG) && (
                 <ActionListItem>
                   <Button
                     id="kc-join-org-groups-button"
