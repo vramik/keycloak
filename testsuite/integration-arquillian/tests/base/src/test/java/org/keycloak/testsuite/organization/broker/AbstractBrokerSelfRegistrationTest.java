@@ -1086,7 +1086,8 @@ public abstract class AbstractBrokerSelfRegistrationTest extends AbstractOrganiz
 
         loginOrgIdp("external", email, true, true);
 
-        assertIsMember(email, organization);
+        // V4: domain gate blocks membership when user's email domain doesn't match any org domain
+        assertIsNotMember(email, organization);
 
         // make sure the federated identity matches the expected broker
         UserRepresentation user = managedRealm.admin().users().searchByEmail(email, true).get(0);

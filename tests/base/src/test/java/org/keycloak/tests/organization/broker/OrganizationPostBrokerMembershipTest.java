@@ -222,9 +222,11 @@ public class OrganizationPostBrokerMembershipTest {
         assertIsMemberWithType(userId, orgA.getId(), MembershipType.UNMANAGED);
 
         String orgId = orgA.getId();
+        String realmName = consumerRealm.getName();
         runOnServer.run(session -> {
+            RealmModel realm = session.realms().getRealmByName(realmName);
+            session.getContext().setRealm(realm);
             OrganizationProvider provider = session.getProvider(OrganizationProvider.class);
-            RealmModel realm = session.getContext().getRealm();
             org.keycloak.models.OrganizationModel org = provider.getById(orgId);
             UserModel user = session.users().getUserById(realm, finalUserId);
 
